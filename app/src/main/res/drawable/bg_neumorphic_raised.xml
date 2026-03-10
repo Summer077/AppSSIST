@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Drop Shadow (Light) Position X=-5, Y=-5, Blur=10 -->
+    <item
+        android:right="10dp"
+        android:bottom="10dp">
+        <shape android:shape="rectangle">
+            <corners android:radius="14dp" />
+            <solid android:color="#E9ECEF" />
+        </shape>
+    </item>
+
+    <!-- Drop Shadow (Dark) Position X=5, Y=5, Blur=10 -->
+    <item
+        android:left="10dp"
+        android:top="10dp">
+        <shape android:shape="rectangle">
+            <corners android:radius="14dp" />
+            <solid android:color="#A6ABBD" />
+        </shape>
+    </item>
+
+    <!-- Fill and Stroke -->
+    <item
+        android:left="5dp"
+        android:top="5dp"
+        android:right="5dp"
+        android:bottom="5dp">
+        <shape android:shape="rectangle">
+            <corners android:radius="14dp" />
+            <!-- Linear Fill: 40% (#66E9ECEF) to 100% (#FFE9ECEF) -->
+            <gradient
+                android:startColor="#66E9ECEF"
+                android:endColor="#E9ECEF"
+                android:angle="135"
+                android:type="linear" />
+            <!-- Stroke: Linear 40% (#66E9ECEF) Weight 1 -->
+            <stroke
+                android:width="1dp"
+                android:color="#66E9ECEF" />
+        </shape>
+    </item>
+</layer-list>

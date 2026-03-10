@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Checked State -->
+    <item android:state_checked="true">
+        <layer-list>
+            <item android:width="22dp" android:height="22dp">
+                <shape android:shape="rectangle">
+                    <corners android:radius="6dp" />
+                    <solid android:color="#E9ECEF" />
+                </shape>
+            </item>
+            <item android:width="22dp" android:height="22dp" android:right="1.5dp" android:bottom="1.5dp">
+                <shape android:shape="rectangle">
+                    <corners android:radius="6dp" />
+                    <solid android:color="#D1D9E6" />
+                </shape>
+            </item>
+            <item android:width="22dp" android:height="22dp" android:left="1.5dp" android:top="1.5dp" android:right="1dp" android:bottom="1dp">
+                <shape android:shape="rectangle">
+                    <corners android:radius="6dp" />
+                    <solid android:color="#E7EBF0" />
+                </shape>
+            </item>
+            <!-- Check Mark Dot -->
+            <item android:width="10dp" android:height="10dp" android:gravity="center">
+                <shape android:shape="oval">
+                    <solid android:color="#212529" />
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+
+    <!-- Unchecked State -->
+    <item>
+        <layer-list>
+            <item android:width="22dp" android:height="22dp">
+                <shape android:shape="rectangle">
+                    <corners android:radius="6dp" />
+                    <solid android:color="#E9ECEF" />
+                </shape>
+            </item>
+            <item android:width="22dp" android:height="22dp" android:right="1.5dp" android:bottom="1.5dp">
+                <shape android:shape="rectangle">
+                    <corners android:radius="6dp" />
+                    <solid android:color="#D1D9E6" />
+                </shape>
+            </item>
+            <item android:width="22dp" android:height="22dp" android:left="1.5dp" android:top="1.5dp" android:right="1dp" android:bottom="1dp">
+                <shape android:shape="rectangle">
+                    <corners android:radius="6dp" />
+                    <solid android:color="#E7EBF0" />
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+</selector>

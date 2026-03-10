@@ -4,4 +4,10 @@
     <color name="white">#FFFFFFFF</color>
     <color name="background_gray">#E9ECEF</color>
     <color name="text_primary">#212529</color>
+
+    <!-- Neumorphic Colors -->
+    <color name="neumorph_recessed_fill">#E7EBF0</color>
+    <color name="neumorph_light">#FFFFFF</color>
+    <color name="neumorph_dark_raised">#A6ABBD</color>
+    <color name="neumorph_dark_recessed">#D1D9E6</color>
 </resources>

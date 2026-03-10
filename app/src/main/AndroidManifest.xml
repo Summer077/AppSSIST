@@ -23,10 +23,16 @@
             </intent-filter>
         </activity>
 
-        <!-- Main Activity -->
+        <!-- Login Activity -->
+        <activity
+            android:name=".LoginActivity"
+            android:exported="false" />
+
+        <!-- Main Activity (Hello World / future Dashboard) -->
         <activity
             android:name=".MainActivity"
             android:exported="false" />
+
     </application>
 
 </manifest>
