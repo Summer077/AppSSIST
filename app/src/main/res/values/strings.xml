@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">ASSIST</string>
+    <string name="app_tagline">Your Academic Scheduling Assistant</string>
+    <string name="app_logo">ASSIST Logo</string>
+</resources>
