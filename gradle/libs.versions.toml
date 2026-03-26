@@ -9,6 +9,7 @@ activityCompose = "1.12.4"
 kotlin = "2.0.21"
 composeBom = "2024.09.00"
 material = "1.12.0"
+googleServices = "4.4.2"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -30,3 +31,4 @@ material = { group = "com.google.android.material", name = "material", version.r
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+google-services = { id = "com.google.gms.google-services", version.ref = "googleServices" }

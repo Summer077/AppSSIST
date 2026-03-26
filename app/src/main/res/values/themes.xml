@@ -13,4 +13,12 @@
         <item name="android:statusBarColor">@color/white</item>
         <item name="android:windowLightStatusBar">true</item>
     </style>
+
+    <style name="RoundedBottomCorners">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSizeBottomLeft">40dp</item>
+        <item name="cornerSizeBottomRight">40dp</item>
+        <item name="cornerSizeTopLeft">0dp</item>
+        <item name="cornerSizeTopRight">0dp</item>
+    </style>
 </resources>

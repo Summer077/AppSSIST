@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "40030258558",
+    "project_id": "appssist-a319a",
+    "storage_bucket": "appssist-a319a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:40030258558:android:6eb0b0ed195e4ee776df2f",
+        "android_client_info": {
+          "package_name": "com.example.appssist"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCBu-UddPHc7zXvIpDRqd6MH_LhYKwA09Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

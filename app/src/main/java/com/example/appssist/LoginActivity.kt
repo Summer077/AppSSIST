@@ -1,68 +1,78 @@
 package com.example.appssist
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.text.method.HideReturnsTransformationMethod
 import android.text.method.PasswordTransformationMethod
 import android.view.View
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.appssist.databinding.ActivityLoginBinding
+import com.google.firebase.auth.FirebaseAuth
 
 class LoginActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityLoginBinding
     private var isPasswordVisible = false
-
-    // Custom transformation to hide characters immediately (no delay)
-    private val instantHideTransformation = object : PasswordTransformationMethod() {
-        override fun getTransformation(source: CharSequence, view: View): CharSequence {
-            return PasswordCharSequence(source)
-        }
-
-        inner class PasswordCharSequence(private val source: CharSequence) : CharSequence {
-            override val length: Int get() = source.length
-            override fun get(index: Int): Char = '●'
-            override fun subSequence(startIndex: Int, endIndex: Int): CharSequence {
-                return PasswordCharSequence(source.subSequence(startIndex, endIndex))
-            }
-        }
-    }
+    private lateinit var auth: FirebaseAuth
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Ensure password is masked initially with the custom instant hide transformation
-        binding.etPassword.transformationMethod = instantHideTransformation
+        auth = FirebaseAuth.getInstance()
 
-        // Password visibility toggle
+        // Check for remembered user
+        val sharedPrefs = getSharedPreferences("AppSSIST_Prefs", Context.MODE_PRIVATE)
+        val savedEmail = sharedPrefs.getString("remembered_email", "")
+        if (savedEmail != null && savedEmail.isNotEmpty()) {
+            binding.etUsername.setText(savedEmail)
+            binding.cbRemember.isChecked = true
+        }
+
         binding.ivPasswordToggle.setOnClickListener {
             isPasswordVisible = !isPasswordVisible
             if (isPasswordVisible) {
-                // Show password
                 binding.etPassword.transformationMethod = HideReturnsTransformationMethod.getInstance()
-                binding.ivPasswordToggle.alpha = 0.5f // Visual feedback that it's toggled
+                binding.ivPasswordToggle.alpha = 0.5f
             } else {
-                // Hide password immediately
-                binding.etPassword.transformationMethod = instantHideTransformation
+                binding.etPassword.transformationMethod = PasswordTransformationMethod.getInstance()
                 binding.ivPasswordToggle.alpha = 1.0f
             }
-            // Move cursor to end
-            binding.etPassword.text?.let {
-                binding.etPassword.setSelection(it.length)
-            }
+            binding.etPassword.setSelection(binding.etPassword.text?.length ?: 0)
         }
 
-        // Login button — navigates to MainActivity
         binding.btnLogin.setOnClickListener {
-            startActivity(Intent(this, MainActivity::class.java))
-            finish()
-        }
+            val email = binding.etUsername.text.toString().trim()
+            val password = binding.etPassword.text.toString().trim()
 
-        // Forgot password (placeholder)
-        binding.tvForgot.setOnClickListener {
-            // TODO: implement forgot password flow
+            if (email.isEmpty() || password.isEmpty()) {
+                Toast.makeText(this, "Please enter email and password", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            // Simple login using Email and Password
+            auth.signInWithEmailAndPassword(email, password)
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        // Handle Remember Me
+                        val editor = sharedPrefs.edit()
+                        if (binding.cbRemember.isChecked) {
+                            editor.putString("remembered_email", email)
+                        } else {
+                            editor.remove("remembered_email")
+                        }
+                        editor.apply()
+
+                        // Navigate to MainActivity (Dashboard)
+                        startActivity(Intent(this, MainActivity::class.java))
+                        finish()
+                    } else {
+                        Toast.makeText(this, "Login failed: ${task.exception?.message}", Toast.LENGTH_LONG).show()
+                    }
+                }
         }
     }
 }
