@@ -85,7 +85,8 @@
                         android:layout_marginStart="10dp"
                         android:textColor="@color/text_primary"
                         android:textColorHint="#888888"
-                        android:inputType="text" />
+                        android:inputType="text"
+                        android:importantForAutofill="no" />
                 </LinearLayout>
             </FrameLayout>
         </LinearLayout>
@@ -95,13 +96,14 @@
     <LinearLayout
         android:id="@+id/ll_main_content_card"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:orientation="vertical"
         android:layout_marginTop="-25dp"
         android:background="@drawable/bg_bottom_nav"
         android:backgroundTint="#E7EBF0"
         android:elevation="4dp"
         android:paddingTop="20dp"
+        android:paddingBottom="40dp"
         android:minHeight="400dp">
 
         <!-- Filters Section -->
@@ -132,34 +134,30 @@
                     android:layout_marginBottom="2dp" />
 
                 <FrameLayout
-                    android:id="@+id/btn_curriculum_selector"
                     android:layout_width="match_parent"
-                    android:layout_height="36dp"
-                    android:background="@drawable/bg_neumorphic_recessed"
-                    android:clickable="false"
-                    android:focusable="false">
+                    android:layout_height="40dp"
+                    android:background="@drawable/bg_neumorphic_recessed">
 
+                    <!-- Arrow FIRST (Background) -->
                     <ImageView
                         android:layout_width="10dp"
                         android:layout_height="10dp"
                         android:layout_gravity="end|center_vertical"
-                        android:layout_marginEnd="8dp"
+                        android:layout_marginEnd="10dp"
                         android:src="@android:drawable/arrow_down_float"
                         app:tint="@color/text_primary"
-                        android:clickable="false"
-                        android:focusable="false"
                         android:importantForAccessibility="no" />
 
+                    <!-- Spinner SECOND (Foreground) -->
                     <Spinner
                         android:id="@+id/spinnerCurriculum"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:background="@android:color/transparent"
                         android:spinnerMode="dropdown"
-                        android:overlapAnchor="false"
-                        android:elevation="2dp"
-                        android:paddingStart="8dp"
-                        android:paddingEnd="24dp" />
+                        android:paddingStart="10dp"
+                        android:paddingEnd="30dp"
+                        android:overlapAnchor="false" />
                 </FrameLayout>
             </LinearLayout>
 
@@ -181,34 +179,30 @@
                     android:layout_marginBottom="2dp" />
 
                 <FrameLayout
-                    android:id="@+id/btn_academic_selector"
                     android:layout_width="match_parent"
-                    android:layout_height="36dp"
-                    android:background="@drawable/bg_neumorphic_recessed"
-                    android:clickable="false"
-                    android:focusable="false">
+                    android:layout_height="40dp"
+                    android:background="@drawable/bg_neumorphic_recessed">
 
+                    <!-- Arrow FIRST (Background) -->
                     <ImageView
                         android:layout_width="10dp"
                         android:layout_height="10dp"
                         android:layout_gravity="end|center_vertical"
-                        android:layout_marginEnd="8dp"
+                        android:layout_marginEnd="10dp"
                         android:src="@android:drawable/arrow_down_float"
                         app:tint="@color/text_primary"
-                        android:clickable="false"
-                        android:focusable="false"
                         android:importantForAccessibility="no" />
 
+                    <!-- Spinner SECOND (Foreground) -->
                     <Spinner
                         android:id="@+id/spinnerAcademicLevel"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:background="@android:color/transparent"
                         android:spinnerMode="dropdown"
-                        android:overlapAnchor="false"
-                        android:elevation="2dp"
-                        android:paddingStart="8dp"
-                        android:paddingEnd="24dp" />
+                        android:paddingStart="10dp"
+                        android:paddingEnd="30dp"
+                        android:overlapAnchor="false" />
                 </FrameLayout>
             </LinearLayout>
         </LinearLayout>
