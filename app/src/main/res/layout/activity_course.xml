@@ -1,0 +1,265 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/layout_course_container"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:visibility="gone"
+    tools:visibility="visible"
+    android:background="@color/background_gray">
+
+    <!-- Header Section -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="200dp">
+
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:src="@drawable/c_page"
+            android:scaleType="centerCrop"
+            android:contentDescription="Course Header Background" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:paddingHorizontal="20dp"
+            android:paddingTop="50dp"
+            android:paddingBottom="20dp">
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Course"
+                    android:textSize="22sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    android:fontFamily="@font/lexend" />
+
+                <ImageView
+                    android:id="@+id/btn_add_course_top"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:layout_alignParentEnd="true"
+                    android:src="@drawable/c_add"
+                    app:tint="@color/text_primary"
+                    android:clickable="true"
+                    android:focusable="true" />
+            </RelativeLayout>
+
+            <!-- Search Bar -->
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="42dp"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/bg_neumorphic_recessed"
+                android:paddingHorizontal="15dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <ImageView
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:src="@android:drawable/ic_menu_search"
+                        app:tint="#888888" />
+
+                    <EditText
+                        android:id="@+id/et_search_course"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@null"
+                        android:hint="Search course"
+                        android:textSize="13sp"
+                        android:fontFamily="@font/lexend"
+                        android:layout_marginStart="10dp"
+                        android:textColor="@color/text_primary"
+                        android:textColorHint="#888888"
+                        android:inputType="text" />
+                </LinearLayout>
+            </FrameLayout>
+        </LinearLayout>
+    </FrameLayout>
+
+    <!-- Main Content Card -->
+    <LinearLayout
+        android:id="@+id/ll_main_content_card"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:layout_marginTop="-25dp"
+        android:background="@drawable/bg_bottom_nav"
+        android:backgroundTint="#E7EBF0"
+        android:elevation="4dp"
+        android:paddingTop="20dp"
+        android:minHeight="400dp">
+
+        <!-- Filters Section -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingHorizontal="15dp"
+            android:weightSum="2"
+            android:layout_marginTop="10dp">
+
+            <!-- Curriculum Group -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:layout_marginEnd="8dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="curriculum"
+                    android:textSize="9sp"
+                    android:textColor="#888888"
+                    android:fontFamily="@font/lexend"
+                    android:layout_marginStart="4dp"
+                    android:layout_marginBottom="2dp" />
+
+                <FrameLayout
+                    android:id="@+id/btn_curriculum_selector"
+                    android:layout_width="match_parent"
+                    android:layout_height="36dp"
+                    android:background="@drawable/bg_neumorphic_recessed"
+                    android:clickable="false"
+                    android:focusable="false">
+
+                    <ImageView
+                        android:layout_width="10dp"
+                        android:layout_height="10dp"
+                        android:layout_gravity="end|center_vertical"
+                        android:layout_marginEnd="8dp"
+                        android:src="@android:drawable/arrow_down_float"
+                        app:tint="@color/text_primary"
+                        android:clickable="false"
+                        android:focusable="false"
+                        android:importantForAccessibility="no" />
+
+                    <Spinner
+                        android:id="@+id/spinnerCurriculum"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@android:color/transparent"
+                        android:spinnerMode="dropdown"
+                        android:overlapAnchor="false"
+                        android:elevation="2dp"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="24dp" />
+                </FrameLayout>
+            </LinearLayout>
+
+            <!-- Academic Level Group -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Academic Level / Term"
+                    android:textSize="9sp"
+                    android:textColor="#888888"
+                    android:fontFamily="@font/lexend"
+                    android:layout_marginStart="4dp"
+                    android:layout_marginBottom="2dp" />
+
+                <FrameLayout
+                    android:id="@+id/btn_academic_selector"
+                    android:layout_width="match_parent"
+                    android:layout_height="36dp"
+                    android:background="@drawable/bg_neumorphic_recessed"
+                    android:clickable="false"
+                    android:focusable="false">
+
+                    <ImageView
+                        android:layout_width="10dp"
+                        android:layout_height="10dp"
+                        android:layout_gravity="end|center_vertical"
+                        android:layout_marginEnd="8dp"
+                        android:src="@android:drawable/arrow_down_float"
+                        app:tint="@color/text_primary"
+                        android:clickable="false"
+                        android:focusable="false"
+                        android:importantForAccessibility="no" />
+
+                    <Spinner
+                        android:id="@+id/spinnerAcademicLevel"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@android:color/transparent"
+                        android:spinnerMode="dropdown"
+                        android:overlapAnchor="false"
+                        android:elevation="2dp"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="24dp" />
+                </FrameLayout>
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Dynamic Content Section -->
+        <LinearLayout
+            android:id="@+id/ll_dynamic_content"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <!-- Semester Header -->
+            <TextView
+                android:id="@+id/tv_semester_header"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="#1E2124"
+                android:textColor="#FFFFFF"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                android:fontFamily="@font/lexend"
+                android:paddingVertical="8dp"
+                android:gravity="center"
+                android:layout_marginTop="25dp"
+                tools:text="First Year, First Semester (20 Units)" />
+
+            <!-- Course List -->
+            <LinearLayout
+                android:id="@+id/ll_course_list"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingHorizontal="20dp"
+                android:paddingTop="15dp"
+                android:paddingBottom="20dp" />
+        </LinearLayout>
+
+        <!-- Empty State -->
+        <TextView
+            android:id="@+id/tv_empty_state"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Select or add a curriculum or academic term."
+            android:gravity="center"
+            android:padding="50dp"
+            android:fontFamily="@font/lexend"
+            android:textColor="#888888"
+            android:visibility="visible" />
+
+    </LinearLayout>
+
+</LinearLayout>

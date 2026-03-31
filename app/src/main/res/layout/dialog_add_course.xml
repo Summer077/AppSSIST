@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:background="@drawable/bg_bottom_nav"
+    android:backgroundTint="#FFFFFF">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Add Course"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="@color/text_primary"
+        android:fontFamily="@font/lexend"
+        android:layout_marginBottom="24dp" />
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:background="@drawable/bg_neumorphic_recessed"
+        android:paddingHorizontal="12dp"
+        android:layout_marginBottom="12dp">
+        <EditText
+            android:id="@+id/et_course_code"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:hint="Course Code (e.g. CPE 408C)"
+            android:background="@null"
+            android:textSize="14sp"
+            android:fontFamily="@font/lexend"
+            android:textColor="@color/text_primary" />
+    </FrameLayout>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:background="@drawable/bg_neumorphic_recessed"
+        android:paddingHorizontal="12dp"
+        android:layout_marginBottom="12dp">
+        <EditText
+            android:id="@+id/et_descriptive_title"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:hint="Descriptive Title"
+            android:background="@null"
+            android:textSize="14sp"
+            android:fontFamily="@font/lexend"
+            android:textColor="@color/text_primary" />
+    </FrameLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="12dp"
+        android:weightSum="3">
+        <FrameLayout
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_neumorphic_recessed"
+            android:paddingHorizontal="12dp"
+            android:layout_marginEnd="8dp">
+            <EditText
+                android:id="@+id/et_lab_hours"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:hint="Lab Hrs"
+                android:inputType="number"
+                android:background="@null"
+                android:textSize="12sp"
+                android:fontFamily="@font/lexend"
+                android:textColor="@color/text_primary" />
+        </FrameLayout>
+        <FrameLayout
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_neumorphic_recessed"
+            android:paddingHorizontal="12dp"
+            android:layout_marginEnd="8dp">
+            <EditText
+                android:id="@+id/et_lec_hours"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:hint="Lec Hrs"
+                android:inputType="number"
+                android:background="@null"
+                android:textSize="12sp"
+                android:fontFamily="@font/lexend"
+                android:textColor="@color/text_primary" />
+        </FrameLayout>
+        <FrameLayout
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_neumorphic_recessed"
+            android:paddingHorizontal="12dp">
+            <EditText
+                android:id="@+id/et_credit_hours"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:hint="Credit Hrs"
+                android:inputType="number"
+                android:background="@null"
+                android:textSize="12sp"
+                android:fontFamily="@font/lexend"
+                android:textColor="@color/text_primary" />
+        </FrameLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="12dp"
+        android:gravity="end">
+        <Button
+            android:id="@+id/btn_cancel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Cancel"
+            android:backgroundTint="#EEEEEE"
+            android:textColor="@color/text_primary"
+            android:fontFamily="@font/lexend"
+            android:layout_marginEnd="8dp" />
+        <Button
+            android:id="@+id/btn_add"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Add"
+            android:backgroundTint="#1E2124"
+            android:textColor="#FFFFFF"
+            android:fontFamily="@font/lexend" />
+    </LinearLayout>
+</LinearLayout>
