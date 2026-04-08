@@ -157,7 +157,8 @@
                         android:spinnerMode="dropdown"
                         android:paddingStart="10dp"
                         android:paddingEnd="30dp"
-                        android:overlapAnchor="false" />
+                        android:overlapAnchor="false"
+                        android:popupBackground="@drawable/bg_spinner_popup" />
                 </FrameLayout>
             </LinearLayout>
 
@@ -202,7 +203,8 @@
                         android:spinnerMode="dropdown"
                         android:paddingStart="10dp"
                         android:paddingEnd="30dp"
-                        android:overlapAnchor="false" />
+                        android:overlapAnchor="false"
+                        android:popupBackground="@drawable/bg_spinner_popup" />
                 </FrameLayout>
             </LinearLayout>
         </LinearLayout>

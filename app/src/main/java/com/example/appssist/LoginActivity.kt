@@ -5,29 +5,26 @@ import android.content.Intent
 import android.os.Bundle
 import android.text.method.HideReturnsTransformationMethod
 import android.text.method.PasswordTransformationMethod
-import android.view.View
+import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import com.example.appssist.databinding.ActivityLoginBinding
-import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.launch
+import retrofit2.HttpException
 
 class LoginActivity : AppCompatActivity() {
-
     private lateinit var binding: ActivityLoginBinding
     private var isPasswordVisible = false
-    private lateinit var auth: FirebaseAuth
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        auth = FirebaseAuth.getInstance()
-
-        // Check for remembered user
         val sharedPrefs = getSharedPreferences("AppSSIST_Prefs", Context.MODE_PRIVATE)
         val savedEmail = sharedPrefs.getString("remembered_email", "")
-        if (savedEmail != null && savedEmail.isNotEmpty()) {
+        if (!savedEmail.isNullOrEmpty()) {
             binding.etUsername.setText(savedEmail)
             binding.cbRemember.isChecked = true
         }
@@ -35,10 +32,12 @@ class LoginActivity : AppCompatActivity() {
         binding.ivPasswordToggle.setOnClickListener {
             isPasswordVisible = !isPasswordVisible
             if (isPasswordVisible) {
-                binding.etPassword.transformationMethod = HideReturnsTransformationMethod.getInstance()
+                binding.etPassword.transformationMethod =
+                    HideReturnsTransformationMethod.getInstance()
                 binding.ivPasswordToggle.alpha = 0.5f
             } else {
-                binding.etPassword.transformationMethod = PasswordTransformationMethod.getInstance()
+                binding.etPassword.transformationMethod =
+                    PasswordTransformationMethod.getInstance()
                 binding.ivPasswordToggle.alpha = 1.0f
             }
             binding.etPassword.setSelection(binding.etPassword.text?.length ?: 0)
@@ -49,30 +48,54 @@ class LoginActivity : AppCompatActivity() {
             val password = binding.etPassword.text.toString().trim()
 
             if (email.isEmpty() || password.isEmpty()) {
-                Toast.makeText(this, "Please enter email and password", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Please enter email and password", Toast.LENGTH_SHORT)
+                    .show()
                 return@setOnClickListener
             }
 
-            // Simple login using Email and Password
-            auth.signInWithEmailAndPassword(email, password)
-                .addOnCompleteListener { task ->
-                    if (task.isSuccessful) {
-                        // Handle Remember Me
-                        val editor = sharedPrefs.edit()
-                        if (binding.cbRemember.isChecked) {
-                            editor.putString("remembered_email", email)
-                        } else {
-                            editor.remove("remembered_email")
-                        }
-                        editor.apply()
+            performLogin(email, password)
+        }
+    }
 
-                        // Navigate to MainActivity (Dashboard)
-                        startActivity(Intent(this, MainActivity::class.java))
-                        finish()
-                    } else {
-                        Toast.makeText(this, "Login failed: ${task.exception?.message}", Toast.LENGTH_LONG).show()
-                    }
+    private fun performLogin(email: String, password: String) {
+        lifecycleScope.launch {
+            try {
+                val response = RetrofitClient.apiService.login(
+                    LoginRequest(username = email, password = password)
+                )
+
+                val accessToken = response.access
+                val sharedPrefs = getSharedPreferences("AppSSIST_Prefs", Context.MODE_PRIVATE)
+                val editor = sharedPrefs.edit()
+
+                if (binding.cbRemember.isChecked) {
+                    editor.putString("remembered_email", email)
+                } else {
+                    editor.remove("remembered_email")
                 }
+
+                editor.putString("access_token", accessToken)
+                editor.apply()
+
+                startActivity(Intent(this@LoginActivity, MainActivity::class.java))
+                finish()
+            } catch (e: HttpException) {
+                val errorBody = e.response()?.errorBody()?.string()
+                Log.e("LoginActivity", "Login failed with code ${e.code()}: $errorBody")
+                
+                Toast.makeText(
+                    this@LoginActivity,
+                    "Login failed: ${e.code()}. Check Logcat for details.",
+                    Toast.LENGTH_LONG
+                ).show()
+            } catch (e: Exception) {
+                Log.e("LoginActivity", "Login error: ${e.message}", e)
+                Toast.makeText(
+                    this@LoginActivity,
+                    "Login failed: ${e.message}",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
         }
     }
 }
