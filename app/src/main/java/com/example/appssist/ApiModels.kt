@@ -19,6 +19,13 @@ data class FacultyData(
     val profile_picture_url: String?
 )
 
+data class FacultyListItem(
+    val id: Int,
+    val first_name: String,
+    val last_name: String,
+    val total_units: Int
+)
+
 data class CurriculumResponse(
     val id: Int,
     val name: String,
@@ -35,6 +42,18 @@ data class CourseResponse(
     val year_level: Int,
     val semester: Int,
     val color: String
+)
+
+data class CourseRequest(
+    val curriculum: Int,
+    val course_code: String,
+    val descriptive_title: String,
+    val laboratory_hours: Int,
+    val lecture_hours: Int,
+    val credit_units: Int,
+    val year_level: Int,
+    val semester: Int,
+    val color: String = "#3498db"
 )
 
 data class SectionResponse(

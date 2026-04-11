@@ -8,6 +8,7 @@
     android:backgroundTint="#FFFFFF">
 
     <TextView
+        android:id="@+id/tv_header"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Add Course"

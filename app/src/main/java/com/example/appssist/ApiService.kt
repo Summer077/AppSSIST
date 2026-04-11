@@ -1,10 +1,6 @@
 package com.example.appssist
 
-import retrofit2.http.Body
-import retrofit2.http.GET
-import retrofit2.http.Header
-import retrofit2.http.POST
-import retrofit2.http.Query
+import retrofit2.http.*
 
 interface ApiService {
     @POST("api/auth/token/")
@@ -33,8 +29,32 @@ interface ApiService {
         @Query("semester") semester: Int?
     ): List<CourseResponse>
 
+    @POST("api/courses/")
+    suspend fun addCourse(
+        @Header("Authorization") authorization: String,
+        @Body request: CourseRequest
+    ): CourseResponse
+
+    @PUT("api/courses/{id}/")
+    suspend fun updateCourse(
+        @Path("id") id: Int,
+        @Header("Authorization") authorization: String,
+        @Body request: CourseRequest
+    ): CourseResponse
+
+    @DELETE("api/courses/{id}/")
+    suspend fun deleteCourse(
+        @Path("id") id: Int,
+        @Header("Authorization") authorization: String
+    ): retrofit2.Response<Unit>
+
     @GET("api/sections/")
     suspend fun getSections(
         @Header("Authorization") authorization: String
     ): List<SectionResponse>
+
+    @GET("api/faculty-list/")
+    suspend fun getFacultyList(
+        @Header("Authorization") authorization: String
+    ): List<FacultyListItem>
 }
