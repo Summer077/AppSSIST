@@ -11,6 +11,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.example.appssist.databinding.ActivityLoginBinding
 import kotlinx.coroutines.launch
+import org.json.JSONObject
 import retrofit2.HttpException
 
 class LoginActivity : AppCompatActivity() {
@@ -45,7 +46,7 @@ class LoginActivity : AppCompatActivity() {
 
         binding.btnLogin.setOnClickListener {
             val email = binding.etUsername.text.toString().trim()
-            val password = binding.etPassword.text.toString().trim()
+            val password = binding.etPassword.text.toString() // Removed trim() to allow spaces in passwords
 
             if (email.isEmpty() || password.isEmpty()) {
                 Toast.makeText(this, "Please enter email and password", Toast.LENGTH_SHORT)
@@ -83,16 +84,23 @@ class LoginActivity : AppCompatActivity() {
                 val errorBody = e.response()?.errorBody()?.string()
                 Log.e("LoginActivity", "Login failed with code ${e.code()}: $errorBody")
                 
+                val errorMessage = try {
+                    val json = JSONObject(errorBody ?: "")
+                    json.optString("detail", "Login failed: ${e.code()}")
+                } catch (ex: Exception) {
+                    "Login failed: ${e.code()}"
+                }
+                
                 Toast.makeText(
                     this@LoginActivity,
-                    "Login failed: ${e.code()}. Check Logcat for details.",
+                    errorMessage,
                     Toast.LENGTH_LONG
                 ).show()
             } catch (e: Exception) {
                 Log.e("LoginActivity", "Login error: ${e.message}", e)
                 Toast.makeText(
                     this@LoginActivity,
-                    "Login failed: ${e.message}",
+                    "Login error: ${e.message}",
                     Toast.LENGTH_LONG
                 ).show()
             }

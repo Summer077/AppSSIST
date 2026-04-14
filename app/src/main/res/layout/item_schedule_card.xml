@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/ll_schedule_card_container"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:clipChildren="false"
+    android:clipToPadding="false">
+
+    <!-- Left Colored Indicator Bar -->
+    <View
+        android:id="@+id/view_schedule_indicator"
+        android:layout_width="4dp"
+        android:layout_height="match_parent"
+        android:layout_marginTop="2dp"
+        android:layout_marginBottom="2dp"
+        android:layout_marginStart="-2dp"
+        android:background="@drawable/bg_indicator_bar" />
+
+    <!-- Card Content -->
+    <LinearLayout
+        android:id="@+id/ll_schedule_card_content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:paddingVertical="4dp"
+        android:paddingHorizontal="8dp"
+        android:layout_marginStart="8dp"
+        android:background="@drawable/bg_schedule_card_round">
+
+        <TextView
+            android:id="@+id/tv_schedule_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Course Title"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:fontFamily="@font/lexend"
+            android:textColor="#1E2124"
+            android:maxLines="3"
+            android:ellipsize="none" />
+
+        <TextView
+            android:id="@+id/tv_schedule_time_range"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="7:30 AM - 8:30 AM | Section"
+            android:textSize="9sp"
+            android:fontFamily="@font/lexend"
+            android:textColor="#444444"
+            android:maxLines="1"
+            android:ellipsize="end" />
+
+        <TextView
+            android:id="@+id/tv_schedule_room"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Room: A-227"
+            android:textSize="9sp"
+            android:fontFamily="@font/lexend"
+            android:textColor="#444444"
+            android:maxLines="1"
+            android:ellipsize="end" />
+    </LinearLayout>
+</LinearLayout>

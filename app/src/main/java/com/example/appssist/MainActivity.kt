@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
+import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.transition.AutoTransition
 import android.transition.TransitionManager
@@ -33,6 +34,9 @@ class MainActivity : AppCompatActivity() {
     private var sections = listOf<SectionResponse>()
     private var courses = listOf<CourseResponse>()
     
+    private var currentUserFaculty: FacultyData? = null
+    private var mySchedules = listOf<ScheduleItemResponse>()
+    
     private var availableLevels = mutableListOf<Pair<Int, Int>>()
 
     private var selectedCurriculumId: Int? = null
@@ -52,6 +56,7 @@ class MainActivity : AppCompatActivity() {
         setupQuickActions()
         setupBottomNavigation()
         setupCourseBackend()
+        setupScheduleBackend()
 
         binding.layoutCourse.llMainContentCard.setOnClickListener {
             hideActiveActions()
@@ -109,13 +114,456 @@ class MainActivity : AppCompatActivity() {
         resetAcademicLevelSpinner()
     }
 
+    private fun setupScheduleBackend() {
+        // Tab Listeners
+        val tabs = listOf(
+            binding.layoutSchedule.tabMySchedule,
+            binding.layoutSchedule.tabFaculty,
+            binding.layoutSchedule.tabSection,
+            binding.layoutSchedule.tabRoom
+        )
+
+        tabs.forEach { tab ->
+            tab.setBackgroundResource(R.drawable.bg_neumorphic_tab)
+            tab.setOnClickListener {
+                updateScheduleTabsUI(tab, tabs)
+                
+                // Switch between sections
+                when(tab.id) {
+                    R.id.tab_my_schedule -> {
+                        binding.layoutSchedule.llMyScheduleSection.visibility = View.VISIBLE
+                        binding.layoutSchedule.llFacultySection.visibility = View.GONE
+                        binding.layoutSchedule.llSectionSection.visibility = View.GONE
+                        binding.layoutSchedule.llRoomSection.visibility = View.GONE
+                        loadMySchedule()
+                    }
+                    R.id.tab_faculty -> {
+                        binding.layoutSchedule.llMyScheduleSection.visibility = View.GONE
+                        binding.layoutSchedule.llFacultySection.visibility = View.VISIBLE
+                        binding.layoutSchedule.llSectionSection.visibility = View.GONE
+                        binding.layoutSchedule.llRoomSection.visibility = View.GONE
+                        loadFacultyListIntoSchedule()
+                    }
+                    R.id.tab_section -> {
+                        binding.layoutSchedule.llMyScheduleSection.visibility = View.GONE
+                        binding.layoutSchedule.llFacultySection.visibility = View.GONE
+                        binding.layoutSchedule.llSectionSection.visibility = View.VISIBLE
+                        binding.layoutSchedule.llRoomSection.visibility = View.GONE
+                        loadSectionListIntoSchedule()
+                    }
+                    R.id.tab_room -> {
+                        binding.layoutSchedule.llMyScheduleSection.visibility = View.GONE
+                        binding.layoutSchedule.llFacultySection.visibility = View.GONE
+                        binding.layoutSchedule.llSectionSection.visibility = View.GONE
+                        binding.layoutSchedule.llRoomSection.visibility = View.VISIBLE
+                        loadRoomListIntoSchedule()
+                    }
+                }
+            }
+        }
+        // Default select first tab
+        binding.layoutSchedule.tabMySchedule.performClick()
+
+        // Day Selector Listeners
+        val days = listOf(
+            binding.layoutSchedule.btnDayMon,
+            binding.layoutSchedule.btnDayTue,
+            binding.layoutSchedule.btnDayWed,
+            binding.layoutSchedule.btnDayThurs,
+            binding.layoutSchedule.btnDayFri,
+            binding.layoutSchedule.btnDaySat
+        )
+
+        days.forEach { dayView ->
+            dayView.setOnClickListener {
+                days.forEach { it.isSelected = false }
+                dayView.isSelected = true
+                
+                val dayName = when(dayView.id) {
+                    R.id.btn_day_mon -> "Monday"
+                    R.id.btn_day_tue -> "Tuesday"
+                    R.id.btn_day_wed -> "Wednesday"
+                    R.id.btn_day_thurs -> "Thursday"
+                    R.id.btn_day_fri -> "Friday"
+                    R.id.btn_day_sat -> "Saturday"
+                    else -> ""
+                }
+                displayScheduleForDay(dayName)
+            }
+        }
+        
+        // Default select Monday
+        binding.layoutSchedule.btnDayMon.performClick()
+    }
+
+    private fun loadMySchedule() {
+        val sharedPrefs = getSharedPreferences("AppSSIST_Prefs", MODE_PRIVATE)
+        val accessToken = sharedPrefs.getString("access_token", null) ?: return
+        val authHeader = "Bearer $accessToken"
+        
+        val facultyId = currentUserFaculty?.id ?: return
+        if (facultyId <= 0) return
+
+        lifecycleScope.launch {
+            try {
+                val response = RetrofitClient.apiService.getFacultySchedule(facultyId, authHeader)
+                mySchedules = response.results ?: emptyList()
+                updateDayDots()
+                val selectedDay = when {
+                    binding.layoutSchedule.btnDayMon.isSelected -> "Monday"
+                    binding.layoutSchedule.btnDayTue.isSelected -> "Tuesday"
+                    binding.layoutSchedule.btnDayWed.isSelected -> "Wednesday"
+                    binding.layoutSchedule.btnDayThurs.isSelected -> "Thursday"
+                    binding.layoutSchedule.btnDayFri.isSelected -> "Friday"
+                    binding.layoutSchedule.btnDaySat.isSelected -> "Saturday"
+                    else -> "Monday"
+                }
+                displayScheduleForDay(selectedDay)
+            } catch (e: Exception) {
+                Log.e("MainActivity", "Failed to load my schedule", e)
+            }
+        }
+    }
+
+    private fun getDayStringFromInt(dayInt: Int?): String {
+        return when(dayInt) {
+            0 -> "Monday"
+            1 -> "Tuesday"
+            2 -> "Wednesday"
+            3 -> "Thursday"
+            4 -> "Friday"
+            5 -> "Saturday"
+            6 -> "Sunday"
+            else -> ""
+        }
+    }
+
+    private fun updateDayDots() {
+        val dayViews = mapOf(
+            "Monday" to binding.layoutSchedule.btnDayMon,
+            "Tuesday" to binding.layoutSchedule.btnDayTue,
+            "Wednesday" to binding.layoutSchedule.btnDayWed,
+            "Thursday" to binding.layoutSchedule.btnDayThurs,
+            "Friday" to binding.layoutSchedule.btnDayFri,
+            "Saturday" to binding.layoutSchedule.btnDaySat
+        )
+
+        dayViews.forEach { (dayName, view) ->
+            val dotContainer = view.getChildAt(1) as? LinearLayout
+            dotContainer?.removeAllViews()
+            
+            val daySchedules = mySchedules.filter { getDayStringFromInt(it.day).equals(dayName, ignoreCase = true) }
+            daySchedules.forEach { schedule ->
+                val dot = View(this).apply {
+                    layoutParams = LinearLayout.LayoutParams(
+                        (6 * resources.displayMetrics.density).toInt(),
+                        (6 * resources.displayMetrics.density).toInt()
+                    ).apply { setMargins(1, 1, 1, 1) }
+                    background = ResourcesCompat.getDrawable(resources, R.drawable.bg_circle_generic, theme)
+                    val colorStr = schedule.courseColor ?: "#888888"
+                    backgroundTintList = android.content.res.ColorStateList.valueOf(Color.parseColor(colorStr))
+                }
+                dotContainer?.addView(dot)
+            }
+        }
+    }
+
+    private fun displayScheduleForDay(dayName: String) {
+        val gridContainer = binding.layoutSchedule.llTimetableGrid
+        val cardsContainer = binding.layoutSchedule.flTimetableCards
+        gridContainer.removeAllViews()
+        cardsContainer.removeAllViews()
+
+        val daySchedules = mySchedules.filter { getDayStringFromInt(it.day).equals(dayName, ignoreCase = true) }
+
+        if (daySchedules.isEmpty()) {
+            binding.layoutSchedule.llNoScheduleState.visibility = View.VISIBLE
+            binding.layoutSchedule.rlTimetableContainer.visibility = View.GONE
+        } else {
+            binding.layoutSchedule.llNoScheduleState.visibility = View.GONE
+            binding.layoutSchedule.rlTimetableContainer.visibility = View.VISIBLE
+            
+            // Build the grid from 7:30 AM to 9:30 PM (21:30)
+            var currentMinutes = 450 // 7:30 AM
+            val endMinutes = 1290 // 9:30 PM
+            
+            while (currentMinutes <= endMinutes) {
+                val rowView = LayoutInflater.from(this).inflate(R.layout.item_timetable_grid_row, gridContainer, false)
+                val hour = currentMinutes / 60
+                val min = currentMinutes % 60
+                val ampm = if (hour >= 12) "PM" else "AM"
+                val displayHour = if (hour % 12 == 0) 12 else hour % 12
+                
+                rowView.findViewById<TextView>(R.id.tv_grid_time_label).text = String.format("%d:%02d %s", displayHour, min, ampm)
+                gridContainer.addView(rowView)
+                currentMinutes += 30
+            }
+
+            // Add the schedule cards
+            daySchedules.forEach { schedule ->
+                val startTimeStr = schedule.startTime ?: ""
+                val endTimeStr = schedule.endTime ?: ""
+                
+                if (startTimeStr.isNotEmpty() && endTimeStr.isNotEmpty()) {
+                    val startMin = timeToMinutes(startTimeStr)
+                    val endMin = timeToMinutes(endTimeStr)
+                    
+                    val title = schedule.courseTitle ?: "No Title"
+                    val range = "${formatTime(startTimeStr)} - ${formatTime(endTimeStr)} | ${schedule.sectionName ?: "N/A"}"
+                    val roomName = "Room: ${schedule.roomName ?: "N/A"}"
+                    val color = schedule.courseColor ?: "#888888"
+                    
+                    addGridScheduleItem(startMin, endMin, title, range, roomName, color)
+                }
+            }
+        }
+    }
+
+    private fun timeToMinutes(timeStr: String): Int {
+        return try {
+            val parts = timeStr.split(":")
+            parts[0].toInt() * 60 + parts[1].toInt()
+        } catch (e: Exception) {
+            450
+        }
+    }
+
+    private fun addGridScheduleItem(startMin: Int, endMin: Int, title: String, range: String, room: String, color: String) {
+        val cardsContainer = binding.layoutSchedule.flTimetableCards
+        val cardView = LayoutInflater.from(this).inflate(R.layout.item_schedule_card, cardsContainer, false)
+        
+        cardView.findViewById<TextView>(R.id.tv_schedule_title).text = title
+        cardView.findViewById<TextView>(R.id.tv_schedule_time_range).text = range
+        cardView.findViewById<TextView>(R.id.tv_schedule_room).text = room
+        
+        val mainColor = Color.parseColor(color)
+        val indicator = cardView.findViewById<View>(R.id.view_schedule_indicator)
+        val indicatorDrawable = ResourcesCompat.getDrawable(resources, R.drawable.bg_indicator_bar, theme) as GradientDrawable
+        indicatorDrawable.setColor(mainColor)
+        indicator.background = indicatorDrawable
+        
+        val lightColor = lightenColor(color, 0.85f)
+        val contentBg = cardView.findViewById<LinearLayout>(R.id.ll_schedule_card_content)
+        val contentDrawable = ResourcesCompat.getDrawable(resources, R.drawable.bg_schedule_card_round, theme) as GradientDrawable
+        contentDrawable.setColor(Color.parseColor(lightColor))
+        contentBg.background = contentDrawable
+        
+        // Match reference: each 30min row is 40dp. 
+        val rowHeightDp = 40f
+        val startFromGridMin = 450 // 7:30 AM
+        
+        // Each 30 mins = 40dp. 1 min = 40/30 dp.
+        val topMarginDp = (startMin - startFromGridMin) * (rowHeightDp / 30f)
+        val heightDp = (endMin - startMin) * (rowHeightDp / 30f)
+        
+        val params = FrameLayout.LayoutParams(
+            FrameLayout.LayoutParams.MATCH_PARENT,
+            heightDp.toInt().dpToPx()
+        )
+        // Adjusting topMargin to align perfectly with the horizontal lines
+        params.topMargin = (topMarginDp + 20f).toInt().dpToPx()
+        params.marginEnd = 8.dpToPx()
+        
+        cardView.layoutParams = params
+        cardsContainer.addView(cardView)
+    }
+
+    private fun Int.dpToPx(): Int = (this * resources.displayMetrics.density).toInt()
+
+    private fun formatTime(timeStr: String): String {
+        if (timeStr.isEmpty()) return ""
+        return try {
+            val parts = timeStr.split(":")
+            val hour = parts[0].toInt()
+            val minute = parts[1]
+            val ampm = if (hour >= 12) "PM" else "AM"
+            val displayHour = if (hour % 12 == 0) 12 else hour % 12
+            "$displayHour:$minute $ampm"
+        } catch (e: Exception) {
+            timeStr
+        }
+    }
+
+    private fun lightenColor(colorStr: String, factor: Float): String {
+        return try {
+            val color = Color.parseColor(colorStr)
+            val r = (Color.red(color) * factor + 255 * (1 - factor)).toInt()
+            val g = (Color.green(color) * factor + 255 * (1 - factor)).toInt()
+            val b = (Color.blue(color) * factor + 255 * (1 - factor)).toInt()
+            String.format("#%02x%02x%02x", r, g, b)
+        } catch (e: Exception) {
+            "#F0F0F0"
+        }
+    }
+
+    private fun loadFacultyListIntoSchedule() {
+        val sharedPrefs = getSharedPreferences("AppSSIST_Prefs", MODE_PRIVATE)
+        val accessToken = sharedPrefs.getString("access_token", null) ?: return
+        val authHeader = "Bearer $accessToken"
+        val container = binding.layoutSchedule.llFacultyList
+        container.removeAllViews()
+
+        lifecycleScope.launch {
+            try {
+                val facultyList = RetrofitClient.apiService.getFacultyList(authHeader)
+                if (facultyList.isEmpty()) {
+                    val tvEmpty = TextView(this@MainActivity).apply {
+                        text = "No faculty found."
+                        setTextColor(Color.GRAY)
+                        gravity = Gravity.CENTER
+                        setPadding(0, 100, 0, 0)
+                        typeface = ResourcesCompat.getFont(this@MainActivity, R.font.lexend)
+                    }
+                    container.addView(tvEmpty)
+                } else {
+                    facultyList.forEach { faculty ->
+                        val card = LayoutInflater.from(this@MainActivity).inflate(R.layout.item_faculty_card, container, false)
+                        
+                        card.findViewById<TextView>(R.id.tv_faculty_name).text = "${faculty.first_name ?: ""} ${faculty.last_name ?: ""}"
+                        card.findViewById<TextView>(R.id.tv_faculty_units).text = faculty.total_units.toString()
+                        
+                        card.findViewById<TextView>(R.id.tv_faculty_type).text = "Full-time"
+                        card.findViewById<TextView>(R.id.tv_faculty_degree).text = "Masters"
+                        card.findViewById<TextView>(R.id.tv_faculty_license).text = "Yes"
+
+                        card.findViewById<TextView>(R.id.btn_view_schedule).setOnClickListener {
+                            Toast.makeText(this@MainActivity, "Viewing schedule for ${faculty.first_name}", Toast.LENGTH_SHORT).show()
+                        }
+
+                        container.addView(card)
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("MainActivity", "Failed to load faculty into schedule", e)
+            }
+        }
+    }
+
+    private fun loadSectionListIntoSchedule() {
+        val sharedPrefs = getSharedPreferences("AppSSIST_Prefs", MODE_PRIVATE)
+        val accessToken = sharedPrefs.getString("access_token", null) ?: return
+        val authHeader = "Bearer $accessToken"
+        val container = binding.layoutSchedule.llSectionList
+        container.removeAllViews()
+
+        lifecycleScope.launch {
+            try {
+                val sectionList = RetrofitClient.apiService.getSections(authHeader)
+                if (sectionList.isEmpty()) {
+                    val tvEmpty = TextView(this@MainActivity).apply {
+                        text = "No sections found."
+                        setTextColor(Color.GRAY)
+                        gravity = Gravity.CENTER
+                        setPadding(0, 100, 0, 0)
+                        typeface = ResourcesCompat.getFont(this@MainActivity, R.font.lexend)
+                    }
+                    container.addView(tvEmpty)
+                } else {
+                    sectionList.forEach { section ->
+                        val card = LayoutInflater.from(this@MainActivity).inflate(R.layout.item_section_card, container, false)
+                        
+                        card.findViewById<TextView>(R.id.tv_section_name).text = section.name
+                        
+                        val yearStr = when(section.year_level) {
+                            1 -> "1st Year"
+                            2 -> "2nd Year"
+                            3 -> "3rd Year"
+                            4 -> "4th Year"
+                            else -> "${section.year_level}th Year"
+                        }
+                        card.findViewById<TextView>(R.id.tv_year_level).text = yearStr
+                        
+                        val semStr = when(section.semester) {
+                            1 -> "1st Sem"
+                            2 -> "2nd Sem"
+                            else -> "${section.semester}th Sem"
+                        }
+                        card.findViewById<TextView>(R.id.tv_semester).text = semStr
+                        
+                        card.findViewById<TextView>(R.id.tv_section_id).text = section.name.takeLast(2)
+                        
+                        val curriculumName = curriculums.find { it.id == section.curriculum }?.name ?: "BSCpE"
+                        card.findViewById<TextView>(R.id.tv_curriculum).text = curriculumName
+
+                        card.findViewById<TextView>(R.id.btn_view_schedule).setOnClickListener {
+                            Toast.makeText(this@MainActivity, "Viewing schedule for ${section.name}", Toast.LENGTH_SHORT).show()
+                        }
+
+                        container.addView(card)
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("MainActivity", "Failed to load sections into schedule", e)
+            }
+        }
+    }
+
+    private fun loadRoomListIntoSchedule() {
+        val sharedPrefs = getSharedPreferences("AppSSIST_Prefs", MODE_PRIVATE)
+        val accessToken = sharedPrefs.getString("access_token", null) ?: return
+        val authHeader = "Bearer $accessToken"
+        val container = binding.layoutSchedule.llRoomList
+        container.removeAllViews()
+
+        lifecycleScope.launch {
+            try {
+                val roomList = RetrofitClient.apiService.getRooms(authHeader)
+                if (roomList.isEmpty()) {
+                    val tvEmpty = TextView(this@MainActivity).apply {
+                        text = "No rooms found."
+                        setTextColor(Color.GRAY)
+                        gravity = Gravity.CENTER
+                        setPadding(0, 100, 0, 0)
+                        typeface = ResourcesCompat.getFont(this@MainActivity, R.font.lexend)
+                    }
+                    container.addView(tvEmpty)
+                } else {
+                    roomList.forEach { room ->
+                        val card = LayoutInflater.from(this@MainActivity).inflate(R.layout.item_room_card, container, false)
+                        
+                        card.findViewById<TextView>(R.id.tv_room_name).text = room.name
+                        card.findViewById<TextView>(R.id.tv_room_type).text = room.roomType
+                        card.findViewById<TextView>(R.id.tv_room_capacity).text = room.capacity.toString()
+                        card.findViewById<TextView>(R.id.tv_room_campus).text = room.campus
+                        card.findViewById<TextView>(R.id.tv_room_number).text = room.roomNumber ?: room.name
+
+                        card.findViewById<TextView>(R.id.btn_view_schedule).setOnClickListener {
+                            Toast.makeText(this@MainActivity, "Viewing schedule for ${room.name}", Toast.LENGTH_SHORT).show()
+                        }
+
+                        container.addView(card)
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("MainActivity", "Failed to load rooms into schedule", e)
+            }
+        }
+    }
+
+    private fun updateScheduleTabsUI(activeTab: TextView, allTabs: List<TextView>) {
+        val activeTextColor = Color.parseColor("#E9ECEF")
+        val inactiveTextColor = Color.parseColor("#1E2124")
+
+        allTabs.forEach { tab ->
+            if (tab == activeTab) {
+                tab.isSelected = true
+                tab.setTextColor(activeTextColor)
+                tab.setTypeface(null, android.graphics.Typeface.BOLD)
+            } else {
+                tab.isSelected = false
+                tab.setTextColor(inactiveTextColor)
+                tab.setTypeface(null, android.graphics.Typeface.NORMAL)
+            }
+        }
+    }
+
     private fun hideActiveActions() {
         activeActionsView?.visibility = View.GONE
         activeActionsView = null
     }
 
     private fun fetchUserData() {
-        val sharedPrefs = getSharedPreferences("AppSSIST_Prefs", Context.MODE_PRIVATE)
+        val sharedPrefs = getSharedPreferences("AppSSIST_Prefs", MODE_PRIVATE)
         val accessToken = sharedPrefs.getString("access_token", null)
 
         if (accessToken.isNullOrEmpty()) {
@@ -127,7 +575,17 @@ class MainActivity : AppCompatActivity() {
         lifecycleScope.launch {
             try {
                 val authHeader = "Bearer $accessToken"
-                val data = RetrofitClient.apiService.getUserFacultyData(authHeader)
+                var data = RetrofitClient.apiService.getUserFacultyData(authHeader)
+                
+                if (data.id <= 0) {
+                    val facultyList = RetrofitClient.apiService.getFacultyList(authHeader)
+                    val matchingFaculty = facultyList.find { it.email?.trim()?.equals(data.email.trim(), ignoreCase = true) == true }
+                    if (matchingFaculty != null) {
+                        data = data.copy(id = matchingFaculty.id)
+                    }
+                }
+                
+                currentUserFaculty = data
 
                 val greeting = if (data.first_name.isNotEmpty()) {
                     "Hello, ${data.first_name}!"
@@ -135,19 +593,18 @@ class MainActivity : AppCompatActivity() {
                     "Hello!"
                 }
                 binding.tvGreeting.text = greeting
+                
+                loadMySchedule()
             } catch (e: HttpException) {
-                val errorBody = e.response()?.errorBody()?.string()
-                Log.e("MainActivity", "HTTP Error ${e.code()}: $errorBody")
                 handleSessionFailure("Server Error: ${e.code()}")
             } catch (e: Exception) {
-                Log.e("MainActivity", "Data Error: ${e.message}", e)
                 handleSessionFailure("Data Error: ${e.message}")
             }
         }
     }
 
     private fun fetchDashboardData() {
-        val sharedPrefs = getSharedPreferences("AppSSIST_Prefs", Context.MODE_PRIVATE)
+        val sharedPrefs = getSharedPreferences("AppSSIST_Prefs", MODE_PRIVATE)
         val accessToken = sharedPrefs.getString("access_token", null) ?: return
         val authHeader = "Bearer $accessToken"
 
@@ -182,7 +639,6 @@ class MainActivity : AppCompatActivity() {
         val container = dialog.findViewById<LinearLayout>(R.id.ll_list_container)
         container.removeAllViews()
 
-        // Status message for feedback
         val tvStatus = TextView(this).apply {
             text = "Loading staff list..."
             setTextColor(Color.BLACK)
@@ -198,12 +654,8 @@ class MainActivity : AppCompatActivity() {
         dialog.window?.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, height)
         dialog.window?.setGravity(Gravity.BOTTOM)
 
-        val sharedPrefs = getSharedPreferences("AppSSIST_Prefs", Context.MODE_PRIVATE)
-        val accessToken = sharedPrefs.getString("access_token", null)
-        if (accessToken == null) {
-            tvStatus.text = "Error: No session found. Please login again."
-            return
-        }
+        val sharedPrefs = getSharedPreferences("AppSSIST_Prefs", MODE_PRIVATE)
+        val accessToken = sharedPrefs.getString("access_token", null) ?: return
         val authHeader = "Bearer $accessToken"
 
         lifecycleScope.launch {
@@ -218,7 +670,7 @@ class MainActivity : AppCompatActivity() {
                     facultyList.forEach { faculty ->
                         val itemView = LayoutInflater.from(this@MainActivity).inflate(R.layout.item_dashboard_list, container, false)
                         itemView.findViewById<TextView>(R.id.tv_item_name).apply {
-                            text = "${faculty.first_name} ${faculty.last_name}"
+                            text = "${faculty.first_name ?: ""} ${faculty.last_name ?: ""}"
                             setTextColor(Color.BLACK)
                             visibility = View.VISIBLE
                         }
@@ -231,14 +683,8 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
             } catch (e: Exception) {
-                Log.e("MainActivity", "Failed to load faculty list", e)
                 container.removeAllViews()
-                val errorMsg = when(e) {
-                    is HttpException -> "Server Error ${e.code()}: ${e.message()}"
-                    is java.net.ConnectException -> "Connection failed. Check if server is running."
-                    else -> "Error: ${e.localizedMessage ?: e.toString()}"
-                }
-                tvStatus.text = errorMsg
+                tvStatus.text = "Error loading list"
                 container.addView(tvStatus)
             }
         }
@@ -406,38 +852,86 @@ class MainActivity : AppCompatActivity() {
 
                 if (courses.isEmpty()) {
                     binding.layoutCourse.tvEmptyState.visibility = View.VISIBLE
+                    binding.layoutCourse.llDynamicContent.visibility = View.GONE
                 } else {
                     binding.layoutCourse.tvEmptyState.visibility = View.GONE
-                    courses.forEach { course ->
-                        val itemView = LayoutInflater.from(this@MainActivity).inflate(R.layout.item_course, container, false)
-                        itemView.findViewById<TextView>(R.id.tv_course_code).text = course.course_code
-                        itemView.findViewById<TextView>(R.id.tv_course_title).text = course.descriptive_title
-                        itemView.findViewById<TextView>(R.id.tv_course_details).text = "${course.credit_units} Units | Lec: ${course.lecture_hours} Lab: ${course.laboratory_hours}"
+                    binding.layoutCourse.llDynamicContent.visibility = View.VISIBLE
+
+                    // Group courses by Year/Semester
+                    val groupedCourses = courses.groupBy { Pair(it.year_level, it.semester) }
+                        .toSortedMap(compareBy({ it.first }, { it.second }))
+
+                    groupedCourses.forEach { (level, courseList) ->
+                        val (year, sem) = level
+                        val yearStr = when(year) {
+                            1 -> "1st"
+                            2 -> "2nd"
+                            3 -> "3rd"
+                            4 -> "4th"
+                            else -> "${year}th"
+                        }
+                        val semStr = when(sem) {
+                            1 -> "1st"
+                            2 -> "2nd"
+                            else -> "${sem}th"
+                        }
+                        val totalUnits = courseList.sumOf { it.credit_units }
                         
-                        val layoutActions = itemView.findViewById<LinearLayout>(R.id.ll_course_actions)
-                        
-                        itemView.setOnClickListener {
-                            if (layoutActions.visibility == View.VISIBLE) {
-                                layoutActions.visibility = View.GONE
-                                activeActionsView = null
-                            } else {
-                                hideActiveActions()
-                                layoutActions.visibility = View.VISIBLE
-                                activeActionsView = layoutActions
+                        // Add Header for this group
+                        val headerView = TextView(this@MainActivity).apply {
+                            layoutParams = LinearLayout.LayoutParams(
+                                LinearLayout.LayoutParams.MATCH_PARENT,
+                                LinearLayout.LayoutParams.WRAP_CONTENT
+                            ).apply {
+                                setMargins(0, (if (container.childCount > 0) 25 else 0).dpToPx(), 0, 0)
                             }
+                            setBackgroundColor(Color.parseColor("#1E2124"))
+                            setTextColor(Color.WHITE)
+                            setTextSize(TypedValue.COMPLEX_UNIT_SP, 10f)
+                            setTypeface(null, android.graphics.Typeface.BOLD)
+                            typeface = ResourcesCompat.getFont(this@MainActivity, R.font.lexend)
+                            setPadding(0, 8.dpToPx(), 0, 8.dpToPx())
+                            gravity = Gravity.CENTER
+                            text = "$yearStr Year, $semStr Semester ($totalUnits Units)"
                         }
+                        container.addView(headerView)
 
-                        itemView.findViewById<ImageButton>(R.id.btn_edit_course).setOnClickListener {
-                            showEditCourseDialog(course)
-                            layoutActions.visibility = View.GONE
-                        }
-                        
-                        itemView.findViewById<ImageButton>(R.id.btn_delete_course).setOnClickListener {
-                            showDeleteCourseConfirmation(course)
-                            layoutActions.visibility = View.GONE
-                        }
+                        // Add Courses for this group
+                        courseList.forEach { course ->
+                            val itemView = LayoutInflater.from(this@MainActivity).inflate(R.layout.item_course, container, false)
+                            // Add horizontal padding only to course items
+                            val contentLayout = itemView.findViewById<LinearLayout>(R.id.ll_course_item_root)
+                            contentLayout.setPadding(20.dpToPx(), 0, 20.dpToPx(), 0)
 
-                        container.addView(itemView)
+                            itemView.findViewById<TextView>(R.id.tv_course_code).text = course.course_code
+                            itemView.findViewById<TextView>(R.id.tv_course_title).text = course.descriptive_title
+                            itemView.findViewById<TextView>(R.id.tv_course_details).text = "${course.credit_units} Units | Lec: ${course.lecture_hours} Lab: ${course.laboratory_hours}"
+                            
+                            val layoutActions = itemView.findViewById<LinearLayout>(R.id.ll_course_actions)
+                            
+                            itemView.setOnClickListener {
+                                if (layoutActions.visibility == View.VISIBLE) {
+                                    layoutActions.visibility = View.GONE
+                                    activeActionsView = null
+                                } else {
+                                    hideActiveActions()
+                                    layoutActions.visibility = View.VISIBLE
+                                    activeActionsView = layoutActions
+                                }
+                            }
+
+                            itemView.findViewById<ImageButton>(R.id.btn_edit_course).setOnClickListener {
+                                showEditCourseDialog(course)
+                                layoutActions.visibility = View.GONE
+                            }
+                            
+                            itemView.findViewById<ImageButton>(R.id.btn_delete_course).setOnClickListener {
+                                showDeleteCourseConfirmation(course)
+                                layoutActions.visibility = View.GONE
+                            }
+
+                            container.addView(itemView)
+                        }
                     }
                 }
             } catch (e: Exception) {
@@ -458,12 +952,12 @@ class MainActivity : AppCompatActivity() {
         val etLec = dialog.findViewById<EditText>(R.id.et_lec_hours)
         val etLab = dialog.findViewById<EditText>(R.id.et_lab_hours)
         val etUnits = dialog.findViewById<EditText>(R.id.et_credit_hours)
-        val btnSave = dialog.findViewById<Button>(R.id.btn_add)
+        val btnAdd = dialog.findViewById<Button>(R.id.btn_add)
         val btnCancel = dialog.findViewById<Button>(R.id.btn_cancel)
 
         btnCancel.setOnClickListener { dialog.dismiss() }
 
-        btnSave.setOnClickListener {
+        btnAdd.setOnClickListener {
             val code = etCode.text.toString()
             val title = etTitle.text.toString()
             val lec = etLec.text.toString().toIntOrNull() ?: 0
@@ -495,7 +989,6 @@ class MainActivity : AppCompatActivity() {
                 dialog.dismiss()
                 loadCoursesAndPopulateLevels()
             } catch (e: Exception) {
-                Log.e("MainActivity", "Failed to add course", e)
                 Toast.makeText(this@MainActivity, "Failed to add course", Toast.LENGTH_SHORT).show()
             }
         }
@@ -587,22 +1080,11 @@ class MainActivity : AppCompatActivity() {
         if (currentNav == nav) return
         currentNav = nav
 
-        // Reset all backgrounds and visibility
-        binding.navHome.background = null
-        binding.tvHome.visibility = View.GONE
-        binding.ivHome.setColorFilter(Color.WHITE)
-
-        binding.navCourse.background = null
-        binding.tvCourse.visibility = View.GONE
-        binding.ivCourse.setColorFilter(Color.WHITE)
-
-        binding.navSchedule.background = null
-        binding.tvSchedule.visibility = View.GONE
-        binding.ivSchedule.setColorFilter(Color.WHITE)
-
-        binding.navProfile.background = null
-        binding.tvProfile.visibility = View.GONE
-        binding.ivProfile.setColorFilter(Color.WHITE)
+        // Reset all backgrounds, visibility and weights
+        resetNavItem(binding.navHome, binding.tvHome, binding.ivHome)
+        resetNavItem(binding.navCourse, binding.tvCourse, binding.ivCourse)
+        resetNavItem(binding.navSchedule, binding.tvSchedule, binding.ivSchedule)
+        resetNavItem(binding.navProfile, binding.tvProfile, binding.ivProfile)
 
         // Set active state
         val activeBg = ResourcesCompat.getDrawable(resources, R.drawable.bg_active_nav, theme)
@@ -612,36 +1094,29 @@ class MainActivity : AppCompatActivity() {
 
         when (nav) {
             "home" -> {
-                binding.navHome.background = activeBg
-                binding.tvHome.visibility = View.VISIBLE
-                binding.ivHome.setColorFilter(activeColor)
+                setActiveNavItem(binding.navHome, binding.tvHome, binding.ivHome, activeBg, activeColor)
                 binding.layoutHome.visibility = View.VISIBLE
                 binding.layoutCourse.root.visibility = View.GONE
                 binding.layoutSchedule.root.visibility = View.GONE
                 binding.layoutProfile.root.visibility = View.GONE
             }
             "course" -> {
-                binding.navCourse.background = activeBg
-                binding.tvCourse.visibility = View.VISIBLE
-                binding.ivCourse.setColorFilter(activeColor)
+                setActiveNavItem(binding.navCourse, binding.tvCourse, binding.ivCourse, activeBg, activeColor)
                 binding.layoutHome.visibility = View.GONE
                 binding.layoutCourse.root.visibility = View.VISIBLE
                 binding.layoutSchedule.root.visibility = View.GONE
                 binding.layoutProfile.root.visibility = View.GONE
+                loadCourses()
             }
             "schedule" -> {
-                binding.navSchedule.background = activeBg
-                binding.tvSchedule.visibility = View.VISIBLE
-                binding.ivSchedule.setColorFilter(activeColor)
+                setActiveNavItem(binding.navSchedule, binding.tvSchedule, binding.ivSchedule, activeBg, activeColor)
                 binding.layoutHome.visibility = View.GONE
                 binding.layoutCourse.root.visibility = View.GONE
                 binding.layoutSchedule.root.visibility = View.VISIBLE
                 binding.layoutProfile.root.visibility = View.GONE
             }
             "profile" -> {
-                binding.navProfile.background = activeBg
-                binding.tvProfile.visibility = View.VISIBLE
-                binding.ivProfile.setColorFilter(activeColor)
+                setActiveNavItem(binding.navProfile, binding.tvProfile, binding.ivProfile, activeBg, activeColor)
                 binding.layoutHome.visibility = View.GONE
                 binding.layoutCourse.root.visibility = View.GONE
                 binding.layoutSchedule.root.visibility = View.GONE
@@ -650,11 +1125,28 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun resetNavItem(layout: LinearLayout, textView: TextView, imageView: ImageView) {
+        layout.background = null
+        textView.visibility = View.GONE
+        imageView.setColorFilter(Color.WHITE)
+        val params = layout.layoutParams as LinearLayout.LayoutParams
+        params.weight = 15f
+        layout.layoutParams = params
+    }
+
+    private fun setActiveNavItem(layout: LinearLayout, textView: TextView, imageView: ImageView, activeBg: android.graphics.drawable.Drawable?, activeColor: Int) {
+        layout.background = activeBg
+        textView.visibility = View.VISIBLE
+        imageView.setColorFilter(activeColor)
+        val params = layout.layoutParams as LinearLayout.LayoutParams
+        params.weight = 55f
+        layout.layoutParams = params
+    }
+
     private fun loadRecentActivities() {
         val container = binding.llRecentActivityList
         container.removeAllViews()
 
-        // Original bullet design - NO CARDS
         val activities = listOf(
             "Added Course: CS 101",
             "Created Schedule for BSIT 1-A",
@@ -668,13 +1160,10 @@ class MainActivity : AppCompatActivity() {
             binding.tvNoRecentActivity.visibility = View.GONE
             binding.tvRecentActivityDateHeader.visibility = View.VISIBLE
             activities.forEach { activity ->
-                val tv = TextView(this)
-                tv.text = "• $activity"
-                tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
-                tv.setTextColor(Color.parseColor("#555555"))
-                tv.setPadding(0, 4, 0, 4)
-                tv.typeface = ResourcesCompat.getFont(this, R.font.lexend)
-                container.addView(tv)
+                val itemView = LayoutInflater.from(this).inflate(R.layout.item_recent_activity, container, false)
+                itemView.findViewById<TextView>(R.id.tv_activity_message).text = activity
+                itemView.findViewById<TextView>(R.id.tv_activity_time).text = "Today"
+                container.addView(itemView)
             }
         }
     }

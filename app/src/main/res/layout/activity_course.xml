@@ -218,7 +218,7 @@
             android:visibility="gone"
             tools:visibility="visible">
 
-            <!-- Semester Header -->
+            <!-- Semester Header (Hidden by default, used for single selection if needed, but now we use dynamic ones) -->
             <TextView
                 android:id="@+id/tv_semester_header"
                 android:layout_width="match_parent"
@@ -231,15 +231,15 @@
                 android:paddingVertical="8dp"
                 android:gravity="center"
                 android:layout_marginTop="25dp"
+                android:visibility="gone"
                 tools:text="First Year, First Semester (20 Units)" />
 
-            <!-- Course List -->
+            <!-- Course List (Horizontal padding removed to allow full-width headers) -->
             <LinearLayout
                 android:id="@+id/ll_course_list"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:paddingHorizontal="20dp"
                 android:paddingTop="15dp"
                 android:paddingBottom="20dp" />
         </LinearLayout>

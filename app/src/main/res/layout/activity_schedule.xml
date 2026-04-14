@@ -1,25 +1,644 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/layout_schedule"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/layout_schedule_container"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:visibility="gone"
-    android:padding="20dp">
-    <TextView
-        android:layout_width="wrap_content"
+    tools:visibility="visible"
+    android:background="@color/background_gray">
+
+    <!-- Header Section -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="200dp">
+
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:src="@drawable/schedule_bg"
+            android:scaleType="centerCrop"
+            android:contentDescription="Schedule Header Background" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:paddingHorizontal="20dp"
+            android:paddingTop="50dp"
+            android:paddingBottom="20dp">
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Schedule"
+                    android:textSize="22sp"
+                    android:textStyle="bold"
+                    android:textColor="#FFFFFF"
+                    android:fontFamily="@font/lexend" />
+
+                <ImageView
+                    android:id="@+id/btn_edit_schedule_top"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:layout_alignParentEnd="true"
+                    android:src="@drawable/schedule_btn"
+                    app:tint="#FFFFFF"
+                    android:clickable="true"
+                    android:focusable="true" />
+            </RelativeLayout>
+
+            <!-- Horizontal Scrollable Tabs -->
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:scrollbars="none">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:paddingBottom="10dp"
+                    android:paddingHorizontal="4dp">
+
+                    <TextView
+                        android:id="@+id/tab_my_schedule"
+                        android:layout_width="120dp"
+                        android:layout_height="44dp"
+                        android:text="My Schedule"
+                        android:background="@drawable/bg_neumorphic_tab"
+                        android:textColor="#1E2124"
+                        android:fontFamily="@font/lexend"
+                        android:textSize="12sp"
+                        android:gravity="center"
+                        android:layout_marginEnd="8dp" />
+
+                    <TextView
+                        android:id="@+id/tab_faculty"
+                        android:layout_width="120dp"
+                        android:layout_height="44dp"
+                        android:text="Faculty"
+                        android:background="@drawable/bg_neumorphic_tab"
+                        android:textColor="#1E2124"
+                        android:fontFamily="@font/lexend"
+                        android:textSize="12sp"
+                        android:gravity="center"
+                        android:layout_marginEnd="8dp" />
+
+                    <TextView
+                        android:id="@+id/tab_section"
+                        android:layout_width="120dp"
+                        android:layout_height="44dp"
+                        android:text="Section"
+                        android:background="@drawable/bg_neumorphic_tab"
+                        android:textColor="#1E2124"
+                        android:fontFamily="@font/lexend"
+                        android:textSize="12sp"
+                        android:gravity="center"
+                        android:layout_marginEnd="8dp" />
+
+                    <TextView
+                        android:id="@+id/tab_room"
+                        android:layout_width="120dp"
+                        android:layout_height="44dp"
+                        android:text="Room"
+                        android:background="@drawable/bg_neumorphic_tab"
+                        android:textColor="#1E2124"
+                        android:fontFamily="@font/lexend"
+                        android:textSize="12sp"
+                        android:gravity="center" />
+                </LinearLayout>
+            </HorizontalScrollView>
+        </LinearLayout>
+    </FrameLayout>
+
+    <!-- Content Sections -->
+    <FrameLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Schedule Page"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        android:textColor="@color/text_primary"
-        android:fontFamily="@font/lexend" />
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="View and create schedules."
-        android:textSize="14sp"
-        android:textColor="#555555"
-        android:fontFamily="@font/lexend"
-        android:layout_marginTop="8dp" />
+        android:layout_marginTop="-25dp">
+
+        <!-- My Schedule Section -->
+        <LinearLayout
+            android:id="@+id/ll_my_schedule_section"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/bg_bottom_nav"
+            android:backgroundTint="#E7EBF0"
+            android:elevation="4dp"
+            android:paddingTop="20dp"
+            android:paddingBottom="40dp"
+            android:minHeight="600dp"
+            android:visibility="visible">
+
+            <!-- Action Buttons -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingHorizontal="20dp"
+                android:weightSum="2"
+                android:layout_marginBottom="20dp">
+
+                <FrameLayout
+                    android:id="@+id/btn_download_pdf"
+                    android:layout_width="0dp"
+                    android:layout_height="44dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_button_pdf"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:layout_marginEnd="8dp">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:text="Download as PDF"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:textColor="#FFFFFF"
+                        android:fontFamily="@font/lexend" />
+                </FrameLayout>
+
+                <FrameLayout
+                    android:id="@+id/btn_print"
+                    android:layout_width="0dp"
+                    android:layout_height="44dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_button_print"
+                    android:clickable="true"
+                    android:focusable="true">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:text="Print"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:textColor="#FFFFFF"
+                        android:fontFamily="@font/lexend" />
+                </FrameLayout>
+            </LinearLayout>
+
+            <!-- Day Selector -->
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:scrollbars="none"
+                android:paddingHorizontal="10dp"
+                android:layout_marginBottom="16dp">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <!-- Monday -->
+                    <LinearLayout
+                        android:id="@+id/btn_day_mon"
+                        android:layout_width="70dp"
+                        android:layout_height="70dp"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:background="@drawable/bg_day_item"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:layout_margin="5dp">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Mon"
+                            android:textStyle="bold"
+                            android:fontFamily="@font/lexend"
+                            android:textColor="#1E2124" />
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:layout_marginTop="4dp" />
+                    </LinearLayout>
+
+                    <!-- Tuesday -->
+                    <LinearLayout
+                        android:id="@+id/btn_day_tue"
+                        android:layout_width="70dp"
+                        android:layout_height="70dp"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:background="@drawable/bg_day_item"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:layout_margin="5dp">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Tue"
+                            android:textStyle="bold"
+                            android:fontFamily="@font/lexend"
+                            android:textColor="#1E2124" />
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:layout_marginTop="4dp" />
+                    </LinearLayout>
+
+                    <!-- Wednesday -->
+                    <LinearLayout
+                        android:id="@+id/btn_day_wed"
+                        android:layout_width="70dp"
+                        android:layout_height="70dp"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:background="@drawable/bg_day_item"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:layout_margin="5dp">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Wed"
+                            android:textStyle="bold"
+                            android:fontFamily="@font/lexend"
+                            android:textColor="#1E2124" />
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:layout_marginTop="4dp" />
+                    </LinearLayout>
+
+                    <!-- Thursday -->
+                    <LinearLayout
+                        android:id="@+id/btn_day_thurs"
+                        android:layout_width="70dp"
+                        android:layout_height="70dp"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:background="@drawable/bg_day_item"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:layout_margin="5dp">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Thurs"
+                            android:textStyle="bold"
+                            android:fontFamily="@font/lexend"
+                            android:textColor="#1E2124" />
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:layout_marginTop="4dp" />
+                    </LinearLayout>
+
+                    <!-- Friday -->
+                    <LinearLayout
+                        android:id="@+id/btn_day_fri"
+                        android:layout_width="70dp"
+                        android:layout_height="70dp"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:background="@drawable/bg_day_item"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:layout_margin="5dp">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Fri"
+                            android:textStyle="bold"
+                            android:fontFamily="@font/lexend"
+                            android:textColor="#1E2124" />
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:layout_marginTop="4dp" />
+                    </LinearLayout>
+
+                    <!-- Saturday -->
+                    <LinearLayout
+                        android:id="@+id/btn_day_sat"
+                        android:layout_width="70dp"
+                        android:layout_height="70dp"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:background="@drawable/bg_day_item"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:layout_margin="5dp">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Sat"
+                            android:textStyle="bold"
+                            android:fontFamily="@font/lexend"
+                            android:textColor="#1E2124" />
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:layout_marginTop="4dp" />
+                    </LinearLayout>
+                </LinearLayout>
+            </HorizontalScrollView>
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <!-- Timetable Grid and Cards Container -->
+                <RelativeLayout
+                    android:id="@+id/rl_timetable_container"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingHorizontal="16dp"
+                    android:visibility="gone">
+
+                    <!-- Grid Lines Layout (Background) -->
+                    <LinearLayout
+                        android:id="@+id/ll_timetable_grid"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical" />
+
+                    <!-- Vertical Separator Line -->
+                    <View
+                        android:layout_width="1.5dp"
+                        android:layout_height="match_parent"
+                        android:layout_marginStart="65dp"
+                        android:background="#D1D5DB"
+                        android:layout_alignTop="@id/ll_timetable_grid"
+                        android:layout_alignBottom="@id/ll_timetable_grid" />
+
+                    <!-- Cards Container (Foreground) -->
+                    <FrameLayout
+                        android:id="@+id/fl_timetable_cards"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="65dp"
+                        android:layout_alignTop="@id/ll_timetable_grid" />
+                </RelativeLayout>
+
+                <LinearLayout
+                    android:id="@+id/ll_no_schedule_state"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:paddingTop="30dp"
+                    android:visibility="visible">
+                    <ImageView
+                        android:layout_width="200dp"
+                        android:layout_height="200dp"
+                        android:src="@drawable/no_schedule"
+                        android:scaleType="fitCenter" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="No Schedule Yet."
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        android:fontFamily="@font/lexend"
+                        android:textColor="#1E2124"
+                        android:layout_marginTop="16dp" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Let's create new schedule to view."
+                        android:textSize="14sp"
+                        android:fontFamily="@font/lexend"
+                        android:textColor="#555555"
+                        android:layout_marginTop="8dp" />
+                </LinearLayout>
+            </FrameLayout>
+        </LinearLayout>
+
+        <!-- Faculty Section -->
+        <LinearLayout
+            android:id="@+id/ll_faculty_section"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/bg_bottom_nav"
+            android:backgroundTint="#E7EBF0"
+            android:elevation="4dp"
+            android:paddingTop="20dp"
+            android:paddingBottom="40dp"
+            android:minHeight="500dp"
+            android:visibility="gone">
+
+            <!-- Search and Add Header -->
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingHorizontal="20dp"
+                android:layout_marginBottom="20dp">
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_toStartOf="@+id/btn_add_faculty_top"
+                    android:layout_marginEnd="12dp"
+                    android:background="@drawable/bg_neumorphic_recessed">
+
+                    <EditText
+                        android:id="@+id/et_search_faculty"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@null"
+                        android:hint="Search faculty"
+                        android:paddingStart="40dp"
+                        android:paddingEnd="16dp"
+                        android:textSize="14sp"
+                        android:fontFamily="@font/lexend"
+                        android:textColor="#1E2124"
+                        android:inputType="text" />
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_gravity="start|center_vertical"
+                        android:layout_marginStart="12dp"
+                        android:src="@android:drawable/ic_menu_search"
+                        app:tint="#888888" />
+                </FrameLayout>
+
+                <ImageView
+                    android:id="@+id/btn_add_faculty_top"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_alignParentEnd="true"
+                    android:background="@drawable/bg_neumorphic_button"
+                    android:padding="12dp"
+                    android:src="@drawable/ic_add"
+                    app:tint="#1E2124"
+                    android:clickable="true"
+                    android:focusable="true" />
+            </RelativeLayout>
+
+            <!-- Faculty List -->
+            <LinearLayout
+                android:id="@+id/ll_faculty_list"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingHorizontal="20dp" />
+        </LinearLayout>
+
+        <!-- Section Section -->
+        <LinearLayout
+            android:id="@+id/ll_section_section"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/bg_bottom_nav"
+            android:backgroundTint="#E7EBF0"
+            android:elevation="4dp"
+            android:paddingTop="20dp"
+            android:paddingBottom="40dp"
+            android:minHeight="500dp"
+            android:visibility="gone">
+
+            <!-- Search and Add Header -->
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingHorizontal="20dp"
+                android:layout_marginBottom="20dp">
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_toStartOf="@+id/btn_add_section_top"
+                    android:layout_marginEnd="12dp"
+                    android:background="@drawable/bg_neumorphic_recessed">
+
+                    <EditText
+                        android:id="@+id/et_search_section"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@null"
+                        android:hint="Search section"
+                        android:paddingStart="40dp"
+                        android:paddingEnd="16dp"
+                        android:textSize="14sp"
+                        android:fontFamily="@font/lexend"
+                        android:textColor="#1E2124"
+                        android:inputType="text" />
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_gravity="start|center_vertical"
+                        android:layout_marginStart="12dp"
+                        android:src="@android:drawable/ic_menu_search"
+                        app:tint="#888888" />
+                </FrameLayout>
+
+                <ImageView
+                    android:id="@+id/btn_add_section_top"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_alignParentEnd="true"
+                    android:background="@drawable/bg_neumorphic_button"
+                    android:padding="12dp"
+                    android:src="@drawable/ic_add"
+                    app:tint="#1E2124"
+                    android:clickable="true"
+                    android:focusable="true" />
+            </RelativeLayout>
+
+            <!-- Section List -->
+            <LinearLayout
+                android:id="@+id/ll_section_list"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingHorizontal="20dp" />
+        </LinearLayout>
+
+        <!-- Room Section -->
+        <LinearLayout
+            android:id="@+id/ll_room_section"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/bg_bottom_nav"
+            android:backgroundTint="#E7EBF0"
+            android:elevation="4dp"
+            android:paddingTop="20dp"
+            android:paddingBottom="40dp"
+            android:minHeight="500dp"
+            android:visibility="gone">
+
+            <!-- Search and Add Header -->
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingHorizontal="20dp"
+                android:layout_marginBottom="20dp">
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_toStartOf="@+id/btn_add_room_top"
+                    android:layout_marginEnd="12dp"
+                    android:background="@drawable/bg_neumorphic_recessed">
+
+                    <EditText
+                        android:id="@+id/et_search_room"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@null"
+                        android:hint="Search room"
+                        android:paddingStart="40dp"
+                        android:paddingEnd="16dp"
+                        android:textSize="14sp"
+                        android:fontFamily="@font/lexend"
+                        android:textColor="#1E2124"
+                        android:inputType="text" />
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_gravity="start|center_vertical"
+                        android:layout_marginStart="12dp"
+                        android:src="@android:drawable/ic_menu_search"
+                        app:tint="#888888" />
+                </FrameLayout>
+
+                <ImageView
+                    android:id="@+id/btn_add_room_top"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_alignParentEnd="true"
+                    android:background="@drawable/bg_neumorphic_button"
+                    android:padding="12dp"
+                    android:src="@drawable/ic_add"
+                    app:tint="#1E2124"
+                    android:clickable="true"
+                    android:focusable="true" />
+            </RelativeLayout>
+
+            <!-- Room List -->
+            <LinearLayout
+                android:id="@+id/ll_room_list"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingHorizontal="20dp" />
+        </LinearLayout>
+
+    </FrameLayout>
 </LinearLayout>

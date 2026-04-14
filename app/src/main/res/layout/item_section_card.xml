@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="8dp"
+    android:layout_marginBottom="8dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_faculty_card"
+        android:orientation="vertical"
+        android:padding="20dp"
+        android:clickable="false"
+        android:focusable="false">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:id="@+id/tv_section_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_toStartOf="@+id/ll_actions"
+                android:layout_marginEnd="8dp"
+                android:text="CPE11S1"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="#1E2124"
+                android:fontFamily="@font/lexend"
+                android:ellipsize="end"
+                android:maxLines="1" />
+
+            <LinearLayout
+                android:id="@+id/ll_actions"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:id="@+id/btn_view_schedule"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="View Schedule"
+                    android:textSize="12sp"
+                    android:textColor="#1E2124"
+                    android:fontFamily="@font/lexend"
+                    android:paddingHorizontal="12dp"
+                    android:paddingVertical="6dp"
+                    android:background="@drawable/bg_view_schedule"
+                    android:clickable="true"
+                    android:focusable="true" />
+
+                <ImageView
+                    android:id="@+id/btn_section_menu"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/ic_more_vert"
+                    android:layout_marginStart="8dp"
+                    app:tint="#1E2124"
+                    android:clickable="true"
+                    android:focusable="true" />
+            </LinearLayout>
+        </RelativeLayout>
+
+        <!-- Column Headers -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:weightSum="4"
+            android:layout_marginBottom="8dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="YEAR LEVEL"
+                android:textSize="10sp"
+                android:textColor="#888888"
+                android:fontFamily="@font/lexend"
+                android:gravity="center" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="SEMESTER"
+                android:textSize="10sp"
+                android:textColor="#888888"
+                android:fontFamily="@font/lexend"
+                android:gravity="center" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="SECTION"
+                android:textSize="10sp"
+                android:textColor="#888888"
+                android:fontFamily="@font/lexend"
+                android:gravity="center" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="CURRICULUM"
+                android:textSize="10sp"
+                android:textColor="#888888"
+                android:fontFamily="@font/lexend"
+                android:gravity="center" />
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#DDDDDD"
+            android:layout_marginBottom="12dp" />
+
+        <!-- Column Values -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:weightSum="4"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/tv_year_level"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="1st Year"
+                android:textSize="11sp"
+                android:textColor="#1E2124"
+                android:fontFamily="@font/lexend"
+                android:gravity="center" />
+
+            <TextView
+                android:id="@+id/tv_semester"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="1st Sem"
+                android:textSize="11sp"
+                android:textColor="#1E2124"
+                android:fontFamily="@font/lexend"
+                android:gravity="center" />
+
+            <TextView
+                android:id="@+id/tv_section_id"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="S1"
+                android:textSize="11sp"
+                android:textColor="#1E2124"
+                android:fontFamily="@font/lexend"
+                android:gravity="center" />
+
+            <TextView
+                android:id="@+id/tv_curriculum"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="BSCpE"
+                android:textSize="11sp"
+                android:textColor="#1E2124"
+                android:fontFamily="@font/lexend"
+                android:gravity="center" />
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

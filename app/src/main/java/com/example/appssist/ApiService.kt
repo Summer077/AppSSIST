@@ -57,4 +57,20 @@ interface ApiService {
     suspend fun getFacultyList(
         @Header("Authorization") authorization: String
     ): List<FacultyListItem>
+
+    @GET("api/rooms/")
+    suspend fun getRooms(
+        @Header("Authorization") authorization: String
+    ): List<RoomResponse>
+
+    @GET("api/faculty/{id}/schedule-data/")
+    suspend fun getFacultySchedule(
+        @Path("id") facultyId: Int,
+        @Header("Authorization") authorization: String
+    ): ScheduleListResponse
+
+    @GET("api/schedule/available-resources/")
+    suspend fun getAvailableResources(
+        @Header("Authorization") authorization: String
+    ): AvailableResourcesResponse
 }

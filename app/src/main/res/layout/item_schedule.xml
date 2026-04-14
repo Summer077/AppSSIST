@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:layout_marginBottom="16dp">
+
+    <!-- Time Column -->
+    <TextView
+        android:id="@+id/tv_schedule_time_label"
+        android:layout_width="60dp"
+        android:layout_height="wrap_content"
+        android:text="7:00 AM"
+        android:textSize="11sp"
+        android:fontFamily="@font/lexend"
+        android:textColor="#888888" />
+
+    <!-- Schedule Card -->
+    <LinearLayout
+        android:id="@+id/ll_schedule_card_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <!-- Left Colored Indicator Bar -->
+        <View
+            android:id="@+id/view_schedule_indicator"
+            android:layout_width="4dp"
+            android:layout_height="match_parent"
+            android:background="#7CB342" />
+
+        <!-- Card Content -->
+        <LinearLayout
+            android:id="@+id/ll_schedule_card_content"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="12dp"
+            android:background="#A5D6A7"
+            android:layout_marginStart="0dp">
+
+            <TextView
+                android:id="@+id/tv_schedule_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="CPE 408C Emerging Technologies 3 in CpE"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:fontFamily="@font/lexend"
+                android:textColor="#1E2124" />
+
+            <TextView
+                android:id="@+id/tv_schedule_time_range"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="7:30 AM - 8:30 AM | CPE11S1"
+                android:textSize="10sp"
+                android:fontFamily="@font/lexend"
+                android:textColor="#555555"
+                android:layout_marginTop="2dp" />
+
+            <TextView
+                android:id="@+id/tv_schedule_room"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Room: A-227"
+                android:textSize="10sp"
+                android:fontFamily="@font/lexend"
+                android:textColor="#555555"
+                android:layout_marginTop="2dp" />
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>
