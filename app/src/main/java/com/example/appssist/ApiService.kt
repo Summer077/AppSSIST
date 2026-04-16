@@ -1,5 +1,6 @@
 package com.example.appssist
 
+import okhttp3.ResponseBody
 import retrofit2.http.*
 
 interface ApiService {
@@ -69,8 +70,52 @@ interface ApiService {
         @Header("Authorization") authorization: String
     ): ScheduleListResponse
 
+    @GET("api/section/{id}/schedule-data/")
+    suspend fun getSectionSchedule(
+        @Path("id") sectionId: Int,
+        @Header("Authorization") authorization: String
+    ): ScheduleListResponse
+
+    @GET("api/room/{id}/schedule-data/")
+    suspend fun getRoomSchedule(
+        @Path("id") roomId: Int,
+        @Header("Authorization") authorization: String
+    ): ScheduleListResponse
+
     @GET("api/schedule/available-resources/")
     suspend fun getAvailableResources(
         @Header("Authorization") authorization: String
     ): AvailableResourcesResponse
+
+    @GET("api/schedule/staff/html/")
+    suspend fun getStaffScheduleHtml(
+        @Header("Authorization") authorization: String
+    ): ResponseBody
+
+    @GET("api/schedule/faculty/{id}/html/")
+    suspend fun getFacultyScheduleHtml(
+        @Path("id") facultyId: Int,
+        @Header("Authorization") authorization: String
+    ): ResponseBody
+
+    @GET("api/schedule/section/{id}/html/")
+    suspend fun getSectionScheduleHtml(
+        @Path("id") sectionId: Int,
+        @Header("Authorization") authorization: String
+    ): ResponseBody
+
+    @GET("api/schedule/room/{id}/html/")
+    suspend fun getRoomScheduleHtml(
+        @Path("id") roomId: Int,
+        @Header("Authorization") authorization: String
+    ): ResponseBody
 }
+
+data class ScheduleHtmlResponse(
+    val success: Boolean,
+    val html: String,
+    val faculty_name: String,
+    val total_lec: Int,
+    val total_lab: Int,
+    val total_units: Int
+)

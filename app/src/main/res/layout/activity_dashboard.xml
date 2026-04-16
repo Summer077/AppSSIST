@@ -465,34 +465,35 @@
     <!-- Bottom Navigation Bar -->
     <LinearLayout
         android:id="@+id/bottom_nav_container"
-        android:layout_width="310dp"
-        android:layout_height="58dp"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         android:background="@drawable/bg_bottom_nav"
         android:orientation="horizontal"
         android:gravity="center"
+        android:layout_marginHorizontal="24dp"
         android:layout_marginBottom="12dp"
-        android:paddingHorizontal="8dp"
+        android:paddingHorizontal="10dp"
         android:weightSum="100">
 
         <!-- Nav Dashboard (Home) -->
         <LinearLayout
             android:id="@+id/nav_home"
             android:layout_width="0dp"
-            android:layout_height="40dp"
+            android:layout_height="42dp"
             android:layout_weight="55"
             android:orientation="horizontal"
             android:gravity="center"
             android:background="@drawable/bg_active_nav"
-            android:paddingHorizontal="10dp"
+            android:paddingHorizontal="12dp"
             android:clickable="true"
             android:focusable="true">
             <ImageView
                 android:id="@+id/iv_home"
-                android:layout_width="20dp"
-                android:layout_height="20dp"
+                android:layout_width="22dp"
+                android:layout_height="22dp"
                 android:src="@drawable/dashboard"
                 app:tint="#1E2124" />
             <TextView
@@ -500,11 +501,11 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Home"
-                android:textSize="11sp"
+                android:textSize="12sp"
                 android:textStyle="bold"
                 android:textColor="#1E2124"
                 android:fontFamily="@font/lexend"
-                android:layout_marginStart="6dp"
+                android:layout_marginStart="8dp"
                 android:maxLines="1"
                 android:ellipsize="end"
                 android:visibility="visible" />
@@ -514,17 +515,17 @@
         <LinearLayout
             android:id="@+id/nav_course"
             android:layout_width="0dp"
-            android:layout_height="40dp"
+            android:layout_height="42dp"
             android:layout_weight="15"
             android:orientation="horizontal"
             android:gravity="center"
-            android:paddingHorizontal="10dp"
+            android:paddingHorizontal="12dp"
             android:clickable="true"
             android:focusable="true">
             <ImageView
                 android:id="@+id/iv_course"
-                android:layout_width="20dp"
-                android:layout_height="20dp"
+                android:layout_width="22dp"
+                android:layout_height="22dp"
                 android:src="@drawable/course"
                 app:tint="#FFFFFF" />
             <TextView
@@ -532,11 +533,11 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Course"
-                android:textSize="11sp"
+                android:textSize="12sp"
                 android:textStyle="bold"
                 android:textColor="#1E2124"
                 android:fontFamily="@font/lexend"
-                android:layout_marginStart="6dp"
+                android:layout_marginStart="8dp"
                 android:maxLines="1"
                 android:ellipsize="end"
                 android:visibility="gone" />
@@ -546,17 +547,17 @@
         <LinearLayout
             android:id="@+id/nav_schedule"
             android:layout_width="0dp"
-            android:layout_height="40dp"
+            android:layout_height="42dp"
             android:layout_weight="15"
             android:orientation="horizontal"
             android:gravity="center"
-            android:paddingHorizontal="10dp"
+            android:paddingHorizontal="12dp"
             android:clickable="true"
             android:focusable="true">
             <ImageView
                 android:id="@+id/iv_schedule"
-                android:layout_width="20dp"
-                android:layout_height="20dp"
+                android:layout_width="22dp"
+                android:layout_height="22dp"
                 android:src="@drawable/schedule"
                 app:tint="#FFFFFF" />
             <TextView
@@ -564,11 +565,11 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Schedule"
-                android:textSize="11sp"
+                android:textSize="12sp"
                 android:textStyle="bold"
                 android:textColor="#1E2124"
                 android:fontFamily="@font/lexend"
-                android:layout_marginStart="6dp"
+                android:layout_marginStart="8dp"
                 android:maxLines="1"
                 android:ellipsize="end"
                 android:visibility="gone" />
@@ -578,17 +579,17 @@
         <LinearLayout
             android:id="@+id/nav_profile"
             android:layout_width="0dp"
-            android:layout_height="40dp"
+            android:layout_height="42dp"
             android:layout_weight="15"
             android:orientation="horizontal"
             android:gravity="center"
-            android:paddingHorizontal="10dp"
+            android:paddingHorizontal="12dp"
             android:clickable="true"
             android:focusable="true">
             <ImageView
                 android:id="@+id/iv_profile"
-                android:layout_width="20dp"
-                android:layout_height="20dp"
+                android:layout_width="22dp"
+                android:layout_height="22dp"
                 android:src="@drawable/profile"
                 app:tint="#FFFFFF" />
             <TextView
@@ -596,11 +597,11 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Profile"
-                android:textSize="11sp"
+                android:textSize="12sp"
                 android:textStyle="bold"
                 android:textColor="#1E2124"
                 android:fontFamily="@font/lexend"
-                android:layout_marginStart="6dp"
+                android:layout_marginStart="8dp"
                 android:maxLines="1"
                 android:ellipsize="end"
                 android:visibility="gone" />

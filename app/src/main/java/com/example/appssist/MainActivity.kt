@@ -7,6 +7,8 @@ import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
+import android.print.PrintAttributes
+import android.print.PrintManager
 import android.transition.AutoTransition
 import android.transition.TransitionManager
 import android.util.Log
@@ -16,6 +18,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.Window
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.res.ResourcesCompat
@@ -57,6 +61,7 @@ class MainActivity : AppCompatActivity() {
         setupBottomNavigation()
         setupCourseBackend()
         setupScheduleBackend()
+        setupPrinting()
 
         binding.layoutCourse.llMainContentCard.setOnClickListener {
             hideActiveActions()
@@ -313,7 +318,7 @@ class MainActivity : AppCompatActivity() {
                     val roomName = "Room: ${schedule.roomName ?: "N/A"}"
                     val color = schedule.courseColor ?: "#888888"
                     
-                    addGridScheduleItem(startMin, endMin, title, range, roomName, color)
+                    addGridScheduleItem(cardsContainer, gridContainer, startMin, endMin, title, range, roomName, color)
                 }
             }
         }
@@ -328,8 +333,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun addGridScheduleItem(startMin: Int, endMin: Int, title: String, range: String, room: String, color: String) {
-        val cardsContainer = binding.layoutSchedule.flTimetableCards
+    private fun addGridScheduleItem(cardsContainer: FrameLayout, gridContainer: LinearLayout, startMin: Int, endMin: Int, title: String, range: String, room: String, color: String) {
         val cardView = LayoutInflater.from(this).inflate(R.layout.item_schedule_card, cardsContainer, false)
         
         cardView.findViewById<TextView>(R.id.tv_schedule_title).text = title
@@ -427,7 +431,7 @@ class MainActivity : AppCompatActivity() {
                         card.findViewById<TextView>(R.id.tv_faculty_license).text = "Yes"
 
                         card.findViewById<TextView>(R.id.btn_view_schedule).setOnClickListener {
-                            Toast.makeText(this@MainActivity, "Viewing schedule for ${faculty.first_name}", Toast.LENGTH_SHORT).show()
+                            showCommonScheduleDialog("${faculty.first_name}'s Schedule", faculty.id, "faculty")
                         }
 
                         container.addView(card)
@@ -435,6 +439,169 @@ class MainActivity : AppCompatActivity() {
                 }
             } catch (e: Exception) {
                 Log.e("MainActivity", "Failed to load faculty into schedule", e)
+            }
+        }
+    }
+
+    private fun showCommonScheduleDialog(title: String, resourceId: Int, type: String) {
+        val dialog = Dialog(this)
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+        dialog.setContentView(R.layout.dialog_faculty_schedule)
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        
+        val height = (resources.displayMetrics.heightPixels * 0.90).toInt()
+        dialog.window?.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, height)
+        dialog.window?.setGravity(Gravity.BOTTOM)
+
+        val tvTitle = dialog.findViewById<TextView>(R.id.tv_dialog_title)
+        tvTitle.text = title
+
+        val btnClose = dialog.findViewById<ImageView>(R.id.btn_close)
+        btnClose.setOnClickListener { dialog.dismiss() }
+
+        val btnPrint = dialog.findViewById<FrameLayout>(R.id.btn_print)
+        val btnDownloadPdf = dialog.findViewById<FrameLayout>(R.id.btn_download_pdf)
+
+        btnPrint.setOnClickListener { 
+            printResourceSchedule(resourceId, type)
+        }
+        btnDownloadPdf.setOnClickListener { 
+            printResourceSchedule(resourceId, type)
+        }
+
+        val daysContainer = dialog.findViewById<LinearLayout>(R.id.ll_days_container)
+        val gridContainer = dialog.findViewById<LinearLayout>(R.id.ll_timetable_grid)
+        val cardsContainer = dialog.findViewById<FrameLayout>(R.id.fl_timetable_cards)
+        val noScheduleState = dialog.findViewById<LinearLayout>(R.id.ll_no_schedule_state)
+        val timetableContainer = dialog.findViewById<RelativeLayout>(R.id.rl_timetable_container)
+
+        val days = listOf("Mon", "Tue", "Wed", "Thurs", "Fri", "Sat")
+        val fullDays = listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday")
+
+        val sharedPrefs = getSharedPreferences("AppSSIST_Prefs", MODE_PRIVATE)
+        val accessToken = sharedPrefs.getString("access_token", null) ?: return
+        val authHeader = "Bearer $accessToken"
+
+        lifecycleScope.launch {
+            try {
+                // Determine which API to call based on type
+                val facultySchedules = when(type) {
+                    "faculty" -> RetrofitClient.apiService.getFacultySchedule(resourceId, authHeader).results ?: emptyList()
+                    "section" -> RetrofitClient.apiService.getSectionSchedule(resourceId, authHeader).results ?: emptyList()
+                    "room" -> RetrofitClient.apiService.getRoomSchedule(resourceId, authHeader).results ?: emptyList()
+                    else -> emptyList()
+                }
+
+                days.forEachIndexed { index, dayName ->
+                    val dayView = LayoutInflater.from(this@MainActivity).inflate(R.layout.item_day_schedule_card, daysContainer, false)
+                    dayView.findViewById<TextView>(R.id.tv_day_name).text = dayName
+                    
+                    val dotsContainer = dayView.findViewById<LinearLayout>(R.id.ll_dots_container)
+                    val daySchedules = facultySchedules.filter { getDayStringFromInt(it.day).equals(fullDays[index], ignoreCase = true) }
+                    
+                    daySchedules.forEach { schedule ->
+                        val dot = View(this@MainActivity).apply {
+                            layoutParams = LinearLayout.LayoutParams(
+                                (6 * resources.displayMetrics.density).toInt(),
+                                (6 * resources.displayMetrics.density).toInt()
+                            ).apply { setMargins(1, 1, 1, 1) }
+                            background = ResourcesCompat.getDrawable(resources, R.drawable.bg_circle_generic, theme)
+                            val colorStr = schedule.courseColor ?: "#888888"
+                            backgroundTintList = android.content.res.ColorStateList.valueOf(Color.parseColor(colorStr))
+                        }
+                        dotsContainer.addView(dot)
+                    }
+
+                    dayView.setOnClickListener {
+                        for (i in 0 until daysContainer.childCount) {
+                            daysContainer.getChildAt(i).isSelected = false
+                        }
+                        dayView.isSelected = true
+                        displayCommonScheduleForDay(daySchedules, gridContainer, cardsContainer, noScheduleState, timetableContainer)
+                    }
+                    daysContainer.addView(dayView)
+                }
+                
+                if (daysContainer.childCount > 0) {
+                    daysContainer.getChildAt(0).performClick()
+                }
+
+            } catch (e: Exception) {
+                Log.e("MainActivity", "Failed to load schedule for dialog", e)
+            }
+        }
+
+        dialog.show()
+    }
+
+    private fun displayCommonScheduleForDay(daySchedules: List<ScheduleItemResponse>, gridContainer: LinearLayout, cardsContainer: FrameLayout, noState: View, timetable: View) {
+        gridContainer.removeAllViews()
+        cardsContainer.removeAllViews()
+
+        if (daySchedules.isEmpty()) {
+            noState.visibility = View.VISIBLE
+            timetable.visibility = View.GONE
+        } else {
+            noState.visibility = View.GONE
+            timetable.visibility = View.VISIBLE
+            
+            var currentMinutes = 450 // 7:30 AM
+            val endMinutes = 1290 // 9:30 PM
+            
+            while (currentMinutes <= endMinutes) {
+                val rowView = LayoutInflater.from(this).inflate(R.layout.item_timetable_grid_row, gridContainer, false)
+                val hour = currentMinutes / 60
+                val min = currentMinutes % 60
+                val ampm = if (hour >= 12) "PM" else "AM"
+                val displayHour = if (hour % 12 == 0) 12 else hour % 12
+                
+                rowView.findViewById<TextView>(R.id.tv_grid_time_label).text = String.format("%d:%02d %s", displayHour, min, ampm)
+                gridContainer.addView(rowView)
+                currentMinutes += 30
+            }
+
+            daySchedules.forEach { schedule ->
+                val startTimeStr = schedule.startTime ?: ""
+                val endTimeStr = schedule.endTime ?: ""
+                
+                if (startTimeStr.isNotEmpty() && endTimeStr.isNotEmpty()) {
+                    val startMin = timeToMinutes(startTimeStr)
+                    val endMin = timeToMinutes(endTimeStr)
+                    
+                    val title = schedule.courseTitle ?: "No Title"
+                    val range = "${formatTime(startTimeStr)} - ${formatTime(endTimeStr)} | ${schedule.sectionName ?: "N/A"}"
+                    val roomName = "Room: ${schedule.roomName ?: "N/A"}"
+                    val color = schedule.courseColor ?: "#888888"
+                    
+                    addGridScheduleItem(cardsContainer, gridContainer, startMin, endMin, title, range, roomName, color)
+                }
+            }
+        }
+    }
+
+    private fun printResourceSchedule(resourceId: Int, type: String) {
+        val sharedPrefs = getSharedPreferences("AppSSIST_Prefs", MODE_PRIVATE)
+        val accessToken = sharedPrefs.getString("access_token", null) ?: return
+        val authHeader = "Bearer $accessToken"
+
+        lifecycleScope.launch {
+            try {
+                val responseBody = when(type) {
+                    "faculty" -> RetrofitClient.apiService.getFacultyScheduleHtml(resourceId, authHeader)
+                    "section" -> RetrofitClient.apiService.getSectionScheduleHtml(resourceId, authHeader)
+                    "room" -> RetrofitClient.apiService.getRoomScheduleHtml(resourceId, authHeader)
+                    else -> throw Exception("Unknown type")
+                }
+                
+                val htmlContent = responseBody.string()
+                runOnUiThread {
+                    doPrint(htmlContent)
+                }
+            } catch (e: Exception) {
+                Log.e("MainActivity", "Print failed for $type", e)
+                runOnUiThread {
+                    Toast.makeText(this@MainActivity, "Print Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
             }
         }
     }
@@ -486,7 +653,7 @@ class MainActivity : AppCompatActivity() {
                         card.findViewById<TextView>(R.id.tv_curriculum).text = curriculumName
 
                         card.findViewById<TextView>(R.id.btn_view_schedule).setOnClickListener {
-                            Toast.makeText(this@MainActivity, "Viewing schedule for ${section.name}", Toast.LENGTH_SHORT).show()
+                            showCommonScheduleDialog("${section.name}'s Schedule", section.id, "section")
                         }
 
                         container.addView(card)
@@ -528,7 +695,7 @@ class MainActivity : AppCompatActivity() {
                         card.findViewById<TextView>(R.id.tv_room_number).text = room.roomNumber ?: room.name
 
                         card.findViewById<TextView>(R.id.btn_view_schedule).setOnClickListener {
-                            Toast.makeText(this@MainActivity, "Viewing schedule for ${room.name}", Toast.LENGTH_SHORT).show()
+                            showCommonScheduleDialog("${room.name}'s Schedule", room.id, "room")
                         }
 
                         container.addView(card)
@@ -1166,6 +1333,60 @@ class MainActivity : AppCompatActivity() {
                 container.addView(itemView)
             }
         }
+    }
+
+    private fun setupPrinting() {
+        binding.layoutSchedule.btnPrint.setOnClickListener {
+            printSchedule()
+        }
+        binding.layoutSchedule.btnDownloadPdf.setOnClickListener {
+            printSchedule() // In Android, Save as PDF is part of the standard print flow
+        }
+    }
+
+    private fun printSchedule() {
+        val sharedPrefs = getSharedPreferences("AppSSIST_Prefs", MODE_PRIVATE)
+        val accessToken = sharedPrefs.getString("access_token", null) ?: return
+        val authHeader = "Bearer $accessToken"
+
+        lifecycleScope.launch {
+            try {
+                // Determine which HTML to fetch based on active schedule tab or current user
+                // Defaulting to staff (my schedule) version
+                val responseBody = RetrofitClient.apiService.getStaffScheduleHtml(authHeader)
+                val htmlContent = responseBody.string()
+                
+                runOnUiThread {
+                    doPrint(htmlContent)
+                }
+            } catch (e: Exception) {
+                Log.e("MainActivity", "Print failed", e)
+                Toast.makeText(this@MainActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun doPrint(htmlContent: String) {
+        val webView = WebView(this)
+        webView.webViewClient = object : WebViewClient() {
+            override fun onPageFinished(view: WebView, url: String) {
+                createWebPrintJob(view)
+            }
+        }
+        // Use a base URL if you have local assets like images/CSS, otherwise null is fine
+        webView.loadDataWithBaseURL(null, htmlContent, "text/html", "UTF-8", null)
+    }
+
+    private fun createWebPrintJob(webView: WebView) {
+        val printManager = getSystemService(Context.PRINT_SERVICE) as PrintManager
+        val jobName = "Schedule Print Job"
+        val printAdapter = webView.createPrintDocumentAdapter(jobName)
+        
+        printManager.print(
+            jobName,
+            printAdapter,
+            PrintAttributes.Builder().build()
+        )
     }
 
     private fun handleSessionFailure(message: String) {
