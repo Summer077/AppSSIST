@@ -14,11 +14,20 @@ data class TokenResponse(
 
 data class FacultyData(
     val id: Int,
-    val first_name: String,
-    val last_name: String,
-    val email: String,
-    val gender: String?,
-    val profile_picture_url: String?,
+    @SerializedName("first_name")
+    val first_name: String = "",
+    @SerializedName("last_name")
+    val last_name: String = "",
+    @SerializedName("email")
+    val email: String = "",
+    @SerializedName("gender")
+    val gender: String? = null,
+    @SerializedName("employment_status")
+    val employment_status: String? = null,
+    @SerializedName("highest_degree")
+    val highest_degree: String? = null,
+    @SerializedName("profile_picture_url")
+    val profile_picture_url: String? = null,
     @SerializedName("total_units")
     val total_units: Int = 0
 )
@@ -28,6 +37,10 @@ data class FacultyListItem(
     val first_name: String?,
     val last_name: String?,
     val email: String? = null,
+    @SerializedName("employment_status")
+    val employment_status: String? = null,
+    @SerializedName("highest_degree")
+    val highest_degree: String? = null,
     @SerializedName(value = "total_units", alternate = ["units"])
     val total_units: Int = 0
 )

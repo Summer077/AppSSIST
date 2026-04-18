@@ -8,23 +8,21 @@ interface ApiService {
     suspend fun login(@Body request: LoginRequest): TokenResponse
 
     @GET("api/user-faculty-data/")
-    suspend fun getUserFacultyData(
-        @Header("Authorization") authorization: String
+    suspend fun getUserFacultyData(): FacultyData
+
+    @PATCH("api/user-profile-update/")
+    suspend fun updateProfile(
+        @Body data: Map<String, String?>
     ): FacultyData
 
     @GET("api/dashboard-stats/")
-    suspend fun getDashboardStats(
-        @Header("Authorization") authorization: String
-    ): DashboardStats
+    suspend fun getDashboardStats(): DashboardStats
 
     @GET("api/curriculums/")
-    suspend fun getCurriculums(
-        @Header("Authorization") authorization: String
-    ): List<CurriculumResponse>
+    suspend fun getCurriculums(): List<CurriculumResponse>
 
     @GET("api/courses/")
     suspend fun getCourses(
-        @Header("Authorization") authorization: String,
         @Query("curriculum") curriculumId: Int?,
         @Query("year") yearLevel: Int?,
         @Query("semester") semester: Int?
@@ -32,90 +30,62 @@ interface ApiService {
 
     @POST("api/courses/")
     suspend fun addCourse(
-        @Header("Authorization") authorization: String,
         @Body request: CourseRequest
     ): CourseResponse
 
     @PUT("api/courses/{id}/")
     suspend fun updateCourse(
         @Path("id") id: Int,
-        @Header("Authorization") authorization: String,
         @Body request: CourseRequest
     ): CourseResponse
 
     @DELETE("api/courses/{id}/")
     suspend fun deleteCourse(
-        @Path("id") id: Int,
-        @Header("Authorization") authorization: String
+        @Path("id") id: Int
     ): retrofit2.Response<Unit>
 
     @GET("api/sections/")
-    suspend fun getSections(
-        @Header("Authorization") authorization: String
-    ): List<SectionResponse>
+    suspend fun getSections(): List<SectionResponse>
 
     @GET("api/faculty-list/")
-    suspend fun getFacultyList(
-        @Header("Authorization") authorization: String
-    ): List<FacultyListItem>
+    suspend fun getFacultyList(): List<FacultyListItem>
 
     @GET("api/rooms/")
-    suspend fun getRooms(
-        @Header("Authorization") authorization: String
-    ): List<RoomResponse>
+    suspend fun getRooms(): List<RoomResponse>
 
     @GET("api/faculty/{id}/schedule-data/")
     suspend fun getFacultySchedule(
-        @Path("id") facultyId: Int,
-        @Header("Authorization") authorization: String
+        @Path("id") facultyId: Int
     ): ScheduleListResponse
 
     @GET("api/section/{id}/schedule-data/")
     suspend fun getSectionSchedule(
-        @Path("id") sectionId: Int,
-        @Header("Authorization") authorization: String
+        @Path("id") sectionId: Int
     ): ScheduleListResponse
 
     @GET("api/room/{id}/schedule-data/")
     suspend fun getRoomSchedule(
-        @Path("id") roomId: Int,
-        @Header("Authorization") authorization: String
+        @Path("id") roomId: Int
     ): ScheduleListResponse
 
     @GET("api/schedule/available-resources/")
-    suspend fun getAvailableResources(
-        @Header("Authorization") authorization: String
-    ): AvailableResourcesResponse
+    suspend fun getAvailableResources(): AvailableResourcesResponse
 
     @GET("api/schedule/staff/html/")
-    suspend fun getStaffScheduleHtml(
-        @Header("Authorization") authorization: String
-    ): ResponseBody
+    suspend fun getStaffScheduleHtml(): ResponseBody
 
     @GET("api/schedule/faculty/{id}/html/")
     suspend fun getFacultyScheduleHtml(
-        @Path("id") facultyId: Int,
-        @Header("Authorization") authorization: String
+        @Path("id") facultyId: Int
     ): ResponseBody
 
     @GET("api/schedule/section/{id}/html/")
     suspend fun getSectionScheduleHtml(
-        @Path("id") sectionId: Int,
-        @Header("Authorization") authorization: String
+        @Path("id") sectionId: Int
     ): ResponseBody
 
     @GET("api/schedule/room/{id}/html/")
     suspend fun getRoomScheduleHtml(
-        @Path("id") roomId: Int,
-        @Header("Authorization") authorization: String
+        @Path("id") roomId: Int
     ): ResponseBody
 }
-
-data class ScheduleHtmlResponse(
-    val success: Boolean,
-    val html: String,
-    val faculty_name: String,
-    val total_lec: Int,
-    val total_lab: Int,
-    val total_units: Int
-)

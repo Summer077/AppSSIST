@@ -17,9 +17,14 @@ import retrofit2.HttpException
 class LoginActivity : AppCompatActivity() {
     private lateinit var binding: ActivityLoginBinding
     private var isPasswordVisible = false
+    private lateinit var tokenManager: TokenManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        RetrofitClient.init(this)
+        tokenManager = TokenManager(this)
+        
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
@@ -46,7 +51,7 @@ class LoginActivity : AppCompatActivity() {
 
         binding.btnLogin.setOnClickListener {
             val email = binding.etUsername.text.toString().trim()
-            val password = binding.etPassword.text.toString() // Removed trim() to allow spaces in passwords
+            val password = binding.etPassword.text.toString()
 
             if (email.isEmpty() || password.isEmpty()) {
                 Toast.makeText(this, "Please enter email and password", Toast.LENGTH_SHORT)
@@ -66,6 +71,8 @@ class LoginActivity : AppCompatActivity() {
                 )
 
                 val accessToken = response.access
+                tokenManager.saveToken(accessToken)
+
                 val sharedPrefs = getSharedPreferences("AppSSIST_Prefs", Context.MODE_PRIVATE)
                 val editor = sharedPrefs.edit()
 
@@ -74,8 +81,6 @@ class LoginActivity : AppCompatActivity() {
                 } else {
                     editor.remove("remembered_email")
                 }
-
-                editor.putString("access_token", accessToken)
                 editor.apply()
 
                 startActivity(Intent(this@LoginActivity, MainActivity::class.java))

@@ -21,7 +21,7 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <!-- Home Content (Includes its own Header) -->
+            <!-- Home Content -->
             <LinearLayout
                 android:id="@+id/layout_home"
                 android:layout_width="match_parent"
@@ -447,17 +447,20 @@
             <!-- Course Content -->
             <include
                 android:id="@+id/layout_course"
-                layout="@layout/activity_course" />
+                layout="@layout/activity_course"
+                android:visibility="gone" />
 
             <!-- Schedule Content -->
             <include
                 android:id="@+id/layout_schedule"
-                layout="@layout/activity_schedule" />
+                layout="@layout/activity_schedule"
+                android:visibility="gone" />
 
             <!-- Profile Content -->
             <include
                 android:id="@+id/layout_profile"
-                layout="@layout/activity_profile" />
+                layout="@layout/activity_profile"
+                android:visibility="gone" />
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>

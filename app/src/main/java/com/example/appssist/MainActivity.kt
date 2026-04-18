@@ -9,6 +9,8 @@ import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.print.PrintAttributes
 import android.print.PrintManager
+import android.text.method.HideReturnsTransformationMethod
+import android.text.method.PasswordTransformationMethod
 import android.transition.AutoTransition
 import android.transition.TransitionManager
 import android.util.Log
@@ -51,6 +53,9 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        RetrofitClient.init(this)
+        
         binding = ActivityDashboardBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
@@ -62,6 +67,7 @@ class MainActivity : AppCompatActivity() {
         setupCourseBackend()
         setupScheduleBackend()
         setupPrinting()
+        setupProfileLogic()
 
         binding.layoutCourse.llMainContentCard.setOnClickListener {
             hideActiveActions()
@@ -202,16 +208,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadMySchedule() {
-        val sharedPrefs = getSharedPreferences("AppSSIST_Prefs", MODE_PRIVATE)
-        val accessToken = sharedPrefs.getString("access_token", null) ?: return
-        val authHeader = "Bearer $accessToken"
-        
         val facultyId = currentUserFaculty?.id ?: return
         if (facultyId <= 0) return
 
         lifecycleScope.launch {
             try {
-                val response = RetrofitClient.apiService.getFacultySchedule(facultyId, authHeader)
+                val response = RetrofitClient.apiService.getFacultySchedule(facultyId)
                 mySchedules = response.results ?: emptyList()
                 updateDayDots()
                 val selectedDay = when {
@@ -401,15 +403,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadFacultyListIntoSchedule() {
-        val sharedPrefs = getSharedPreferences("AppSSIST_Prefs", MODE_PRIVATE)
-        val accessToken = sharedPrefs.getString("access_token", null) ?: return
-        val authHeader = "Bearer $accessToken"
         val container = binding.layoutSchedule.llFacultyList
         container.removeAllViews()
 
         lifecycleScope.launch {
             try {
-                val facultyList = RetrofitClient.apiService.getFacultyList(authHeader)
+                val facultyList = RetrofitClient.apiService.getFacultyList()
                 if (facultyList.isEmpty()) {
                     val tvEmpty = TextView(this@MainActivity).apply {
                         text = "No faculty found."
@@ -426,8 +425,14 @@ class MainActivity : AppCompatActivity() {
                         card.findViewById<TextView>(R.id.tv_faculty_name).text = "${faculty.first_name ?: ""} ${faculty.last_name ?: ""}"
                         card.findViewById<TextView>(R.id.tv_faculty_units).text = faculty.total_units.toString()
                         
-                        card.findViewById<TextView>(R.id.tv_faculty_type).text = "Full-time"
-                        card.findViewById<TextView>(R.id.tv_faculty_degree).text = "Masters"
+                        val empStatus = when(faculty.employment_status?.lowercase()) {
+                            "full_time" -> "Full-Time"
+                            "part_time" -> "Part-Time"
+                            "contractual" -> "Contractual"
+                            else -> "Full-time"
+                        }
+                        card.findViewById<TextView>(R.id.tv_faculty_type).text = empStatus
+                        card.findViewById<TextView>(R.id.tv_faculty_degree).text = faculty.highest_degree ?: "Masters"
                         card.findViewById<TextView>(R.id.tv_faculty_license).text = "Yes"
 
                         card.findViewById<TextView>(R.id.btn_view_schedule).setOnClickListener {
@@ -478,17 +483,13 @@ class MainActivity : AppCompatActivity() {
         val days = listOf("Mon", "Tue", "Wed", "Thurs", "Fri", "Sat")
         val fullDays = listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday")
 
-        val sharedPrefs = getSharedPreferences("AppSSIST_Prefs", MODE_PRIVATE)
-        val accessToken = sharedPrefs.getString("access_token", null) ?: return
-        val authHeader = "Bearer $accessToken"
-
         lifecycleScope.launch {
             try {
                 // Determine which API to call based on type
                 val facultySchedules = when(type) {
-                    "faculty" -> RetrofitClient.apiService.getFacultySchedule(resourceId, authHeader).results ?: emptyList()
-                    "section" -> RetrofitClient.apiService.getSectionSchedule(resourceId, authHeader).results ?: emptyList()
-                    "room" -> RetrofitClient.apiService.getRoomSchedule(resourceId, authHeader).results ?: emptyList()
+                    "faculty" -> RetrofitClient.apiService.getFacultySchedule(resourceId).results ?: emptyList()
+                    "section" -> RetrofitClient.apiService.getSectionSchedule(resourceId).results ?: emptyList()
+                    "room" -> RetrofitClient.apiService.getRoomSchedule(resourceId).results ?: emptyList()
                     else -> emptyList()
                 }
 
@@ -580,16 +581,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun printResourceSchedule(resourceId: Int, type: String) {
-        val sharedPrefs = getSharedPreferences("AppSSIST_Prefs", MODE_PRIVATE)
-        val accessToken = sharedPrefs.getString("access_token", null) ?: return
-        val authHeader = "Bearer $accessToken"
-
         lifecycleScope.launch {
             try {
                 val responseBody = when(type) {
-                    "faculty" -> RetrofitClient.apiService.getFacultyScheduleHtml(resourceId, authHeader)
-                    "section" -> RetrofitClient.apiService.getSectionScheduleHtml(resourceId, authHeader)
-                    "room" -> RetrofitClient.apiService.getRoomScheduleHtml(resourceId, authHeader)
+                    "faculty" -> RetrofitClient.apiService.getFacultyScheduleHtml(resourceId)
+                    "section" -> RetrofitClient.apiService.getSectionScheduleHtml(resourceId)
+                    "room" -> RetrofitClient.apiService.getRoomScheduleHtml(resourceId)
                     else -> throw Exception("Unknown type")
                 }
                 
@@ -607,15 +604,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadSectionListIntoSchedule() {
-        val sharedPrefs = getSharedPreferences("AppSSIST_Prefs", MODE_PRIVATE)
-        val accessToken = sharedPrefs.getString("access_token", null) ?: return
-        val authHeader = "Bearer $accessToken"
         val container = binding.layoutSchedule.llSectionList
         container.removeAllViews()
 
         lifecycleScope.launch {
             try {
-                val sectionList = RetrofitClient.apiService.getSections(authHeader)
+                val sectionList = RetrofitClient.apiService.getSections()
                 if (sectionList.isEmpty()) {
                     val tvEmpty = TextView(this@MainActivity).apply {
                         text = "No sections found."
@@ -666,15 +660,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadRoomListIntoSchedule() {
-        val sharedPrefs = getSharedPreferences("AppSSIST_Prefs", MODE_PRIVATE)
-        val accessToken = sharedPrefs.getString("access_token", null) ?: return
-        val authHeader = "Bearer $accessToken"
         val container = binding.layoutSchedule.llRoomList
         container.removeAllViews()
 
         lifecycleScope.launch {
             try {
-                val roomList = RetrofitClient.apiService.getRooms(authHeader)
+                val roomList = RetrofitClient.apiService.getRooms()
                 if (roomList.isEmpty()) {
                     val tvEmpty = TextView(this@MainActivity).apply {
                         text = "No rooms found."
@@ -741,11 +732,10 @@ class MainActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             try {
-                val authHeader = "Bearer $accessToken"
-                var data = RetrofitClient.apiService.getUserFacultyData(authHeader)
+                var data = RetrofitClient.apiService.getUserFacultyData()
                 
                 if (data.id <= 0) {
-                    val facultyList = RetrofitClient.apiService.getFacultyList(authHeader)
+                    val facultyList = RetrofitClient.apiService.getFacultyList()
                     val matchingFaculty = facultyList.find { it.email?.trim()?.equals(data.email.trim(), ignoreCase = true) == true }
                     if (matchingFaculty != null) {
                         data = data.copy(id = matchingFaculty.id)
@@ -761,6 +751,37 @@ class MainActivity : AppCompatActivity() {
                 }
                 binding.tvGreeting.text = greeting
                 
+                // Update profile UI with data
+                binding.layoutProfile.tvProfileName.text = "${data.first_name} ${data.last_name}"
+                binding.layoutProfile.tvProfileEmailSub.text = data.email
+                binding.layoutProfile.etFirstName.setText(data.first_name)
+                binding.layoutProfile.etLastName.setText(data.last_name)
+                binding.layoutProfile.etEmail.setText(data.email)
+                
+                // Set initial selection for gender spinner
+                val genderIndex = if (data.gender?.equals("F", ignoreCase = true) == true || data.gender?.equals("Female", ignoreCase = true) == true) 1 else 0
+                binding.layoutProfile.spinnerGender.setSelection(genderIndex)
+
+                // Set initial selection for employment status spinner
+                val employmentOptions = listOf("Full-Time", "Part-Time", "Contractual")
+                val empValue = when(data.employment_status?.lowercase()) {
+                    "full_time" -> "Full-Time"
+                    "part_time" -> "Part-Time"
+                    "contractual" -> "Contractual"
+                    else -> "Full-Time"
+                }
+                val empIndex = employmentOptions.indexOfFirst { it.equals(empValue, ignoreCase = true) }.let { if (it == -1) 0 else it }
+                binding.layoutProfile.spinnerEmploymentStatus.setSelection(empIndex)
+                
+                // Set initial selection for degree spinner
+                val degreeOptions = listOf("Master's Degree", "Doctoral's Degree")
+                val degIndex = when {
+                    data.highest_degree?.contains("Master", ignoreCase = true) == true -> 0
+                    data.highest_degree?.contains("Doctor", ignoreCase = true) == true -> 1
+                    else -> 0
+                }
+                binding.layoutProfile.spinnerDegree.setSelection(degIndex)
+                
                 loadMySchedule()
             } catch (e: HttpException) {
                 handleSessionFailure("Server Error: ${e.code()}")
@@ -771,20 +792,16 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun fetchDashboardData() {
-        val sharedPrefs = getSharedPreferences("AppSSIST_Prefs", MODE_PRIVATE)
-        val accessToken = sharedPrefs.getString("access_token", null) ?: return
-        val authHeader = "Bearer $accessToken"
-
         lifecycleScope.launch {
             try {
-                val stats = RetrofitClient.apiService.getDashboardStats(authHeader)
+                val stats = RetrofitClient.apiService.getDashboardStats()
                 binding.tvTotalStaff.text = stats.faculty_count.toString()
                 binding.tvTotalSections.text = stats.section_count.toString()
 
-                curriculums = RetrofitClient.apiService.getCurriculums(authHeader)
+                curriculums = RetrofitClient.apiService.getCurriculums()
                 updateCurriculumSpinner()
 
-                sections = RetrofitClient.apiService.getSections(authHeader)
+                sections = RetrofitClient.apiService.getSections()
             } catch (e: Exception) {
                 Log.e("MainActivity", "Failed to fetch dashboard data", e)
             }
@@ -821,13 +838,9 @@ class MainActivity : AppCompatActivity() {
         dialog.window?.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, height)
         dialog.window?.setGravity(Gravity.BOTTOM)
 
-        val sharedPrefs = getSharedPreferences("AppSSIST_Prefs", MODE_PRIVATE)
-        val accessToken = sharedPrefs.getString("access_token", null) ?: return
-        val authHeader = "Bearer $accessToken"
-
         lifecycleScope.launch {
             try {
-                val facultyList = RetrofitClient.apiService.getFacultyList(authHeader)
+                val facultyList = RetrofitClient.apiService.getFacultyList()
                 container.removeAllViews()
                 
                 if (facultyList.isEmpty()) {
@@ -951,13 +964,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadCoursesAndPopulateLevels() {
-        val sharedPrefs = getSharedPreferences("AppSSIST_Prefs", Context.MODE_PRIVATE)
-        val accessToken = sharedPrefs.getString("access_token", null) ?: return
-        val authHeader = "Bearer $accessToken"
-
         lifecycleScope.launch {
             try {
-                val allCourses = RetrofitClient.apiService.getCourses(authHeader, selectedCurriculumId, null, null)
+                val allCourses = RetrofitClient.apiService.getCourses(selectedCurriculumId, null, null)
                 courses = allCourses
                 
                 availableLevels = allCourses.map { Pair(it.year_level, it.semester) }.distinct().sortedWith(compareBy({ it.first }, { it.second })).toMutableList()
@@ -1005,13 +1014,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadCourses() {
-        val sharedPrefs = getSharedPreferences("AppSSIST_Prefs", Context.MODE_PRIVATE)
-        val accessToken = sharedPrefs.getString("access_token", null) ?: return
-        val authHeader = "Bearer $accessToken"
-
         lifecycleScope.launch {
             try {
-                val fetchedCourses = RetrofitClient.apiService.getCourses(authHeader, selectedCurriculumId, selectedYearLevel, selectedSemester)
+                val fetchedCourses = RetrofitClient.apiService.getCourses(selectedCurriculumId, selectedYearLevel, selectedSemester)
                 courses = fetchedCourses
                 
                 val container = binding.layoutCourse.llCourseList
@@ -1144,14 +1149,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun saveCourse(code: String, title: String, lec: Int, lab: Int, units: Int, year: Int, sem: Int, dialog: Dialog) {
-        val sharedPrefs = getSharedPreferences("AppSSIST_Prefs", Context.MODE_PRIVATE)
-        val accessToken = sharedPrefs.getString("access_token", null) ?: return
-        val authHeader = "Bearer $accessToken"
-
         lifecycleScope.launch {
             try {
                 val courseRequest = CourseRequest(selectedCurriculumId!!, code, title, lab, lec, units, year, sem)
-                RetrofitClient.apiService.addCourse(authHeader, courseRequest)
+                RetrofitClient.apiService.addCourse(courseRequest)
                 Toast.makeText(this@MainActivity, "Course added successfully", Toast.LENGTH_SHORT).show()
                 dialog.dismiss()
                 loadCoursesAndPopulateLevels()
@@ -1199,14 +1200,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateCourse(id: Int, code: String, title: String, lec: Int, lab: Int, units: Int, year: Int, sem: Int, dialog: Dialog) {
-        val sharedPrefs = getSharedPreferences("AppSSIST_Prefs", Context.MODE_PRIVATE)
-        val accessToken = sharedPrefs.getString("access_token", null) ?: return
-        val authHeader = "Bearer $accessToken"
-
         lifecycleScope.launch {
             try {
                 val courseRequest = CourseRequest(selectedCurriculumId!!, code, title, lab, lec, units, year, sem)
-                RetrofitClient.apiService.updateCourse(id, authHeader, courseRequest)
+                RetrofitClient.apiService.updateCourse(id, courseRequest)
                 Toast.makeText(this@MainActivity, "Course updated", Toast.LENGTH_SHORT).show()
                 dialog.dismiss()
                 loadCourses()
@@ -1228,13 +1225,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun deleteCourse(id: Int) {
-        val sharedPrefs = getSharedPreferences("AppSSIST_Prefs", Context.MODE_PRIVATE)
-        val accessToken = sharedPrefs.getString("access_token", null) ?: return
-        val authHeader = "Bearer $accessToken"
-
         lifecycleScope.launch {
             try {
-                RetrofitClient.apiService.deleteCourse(id, authHeader)
+                RetrofitClient.apiService.deleteCourse(id)
                 Toast.makeText(this@MainActivity, "Course deleted", Toast.LENGTH_SHORT).show()
                 loadCourses()
             } catch (e: Exception) {
@@ -1345,15 +1338,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun printSchedule() {
-        val sharedPrefs = getSharedPreferences("AppSSIST_Prefs", MODE_PRIVATE)
-        val accessToken = sharedPrefs.getString("access_token", null) ?: return
-        val authHeader = "Bearer $accessToken"
-
         lifecycleScope.launch {
             try {
                 // Determine which HTML to fetch based on active schedule tab or current user
                 // Defaulting to staff (my schedule) version
-                val responseBody = RetrofitClient.apiService.getStaffScheduleHtml(authHeader)
+                val responseBody = RetrofitClient.apiService.getStaffScheduleHtml()
                 val htmlContent = responseBody.string()
                 
                 runOnUiThread {
@@ -1395,5 +1384,170 @@ class MainActivity : AppCompatActivity() {
         sharedPrefs.edit().clear().apply()
         startActivity(Intent(this, LoginActivity::class.java))
         finish()
+    }
+
+    private fun setupProfileLogic() {
+        val layout = binding.layoutProfile
+        
+        // Setup Gender Spinner with custom design
+        val genderOptions = listOf("Male", "Female")
+        val genderAdapter = ArrayAdapter(this, R.layout.item_spinner_selected, android.R.id.text1, genderOptions)
+        genderAdapter.setDropDownViewResource(R.layout.item_spinner_dropdown)
+        layout.spinnerGender.adapter = genderAdapter
+        
+        // Setup Employment Status Spinner with custom design
+        val employmentOptions = listOf("Full-Time", "Part-Time", "Contractual")
+        val empAdapter = ArrayAdapter(this, R.layout.item_spinner_selected, android.R.id.text1, employmentOptions)
+        empAdapter.setDropDownViewResource(R.layout.item_spinner_dropdown)
+        layout.spinnerEmploymentStatus.adapter = empAdapter
+
+        // Setup Highest Degree Spinner with custom design
+        val degreeOptions = listOf("Master's Degree", "Doctoral's Degree")
+        val degAdapter = ArrayAdapter(this, R.layout.item_spinner_selected, android.R.id.text1, degreeOptions)
+        degAdapter.setDropDownViewResource(R.layout.item_spinner_dropdown)
+        layout.spinnerDegree.adapter = degAdapter
+
+        layout.btnEditProfile.setOnClickListener {
+            toggleProfileEdit(true)
+        }
+        
+        layout.ivProfileBg.setOnClickListener {
+            toggleProfileEdit(true)
+        }
+        
+        layout.cvProfilePic.setOnClickListener {
+            toggleProfileEdit(true)
+        }
+
+        // Removed unlock email listener as it's now read-only
+        
+        layout.btnCancelEdit.setOnClickListener {
+            toggleProfileEdit(false)
+            // Restore original values
+            currentUserFaculty?.let { data ->
+                layout.etFirstName.setText(data.first_name)
+                layout.etLastName.setText(data.last_name)
+                layout.etEmail.setText(data.email)
+                
+                val genderIndex = if (data.gender?.equals("F", ignoreCase = true) == true || data.gender?.equals("Female", ignoreCase = true) == true) 1 else 0
+                layout.spinnerGender.setSelection(genderIndex)
+                
+                val empValue = when(data.employment_status?.lowercase()) {
+                    "full_time" -> "Full-Time"
+                    "part_time" -> "Part-Time"
+                    "contractual" -> "Contractual"
+                    else -> data.employment_status ?: ""
+                }
+                val empIndex = employmentOptions.indexOfFirst { it.equals(empValue, ignoreCase = true) }.let { if (it == -1) 0 else it }
+                layout.spinnerEmploymentStatus.setSelection(empIndex)
+
+                val degIndex = when {
+                    data.highest_degree?.contains("Master", ignoreCase = true) == true -> 0
+                    data.highest_degree?.contains("Doctor", ignoreCase = true) == true -> 1
+                    else -> 0
+                }
+                layout.spinnerDegree.setSelection(degIndex)
+            }
+        }
+        
+        layout.btnSaveProfile.setOnClickListener {
+            saveProfileChanges()
+        }
+        
+        // Initialize in read-only mode
+        toggleProfileEdit(false)
+
+        layout.btnLogout.setOnClickListener {
+            val sharedPrefs = getSharedPreferences("AppSSIST_Prefs", Context.MODE_PRIVATE)
+            sharedPrefs.edit().clear().apply()
+            startActivity(Intent(this, LoginActivity::class.java))
+            finish()
+        }
+    }
+
+    private fun toggleProfileEdit(enabled: Boolean) {
+        val layout = binding.layoutProfile
+        
+        layout.etFirstName.isEnabled = enabled
+        layout.etLastName.isEnabled = enabled
+        
+        // Email logic: Allow editing if enabled to fix sync issues
+        layout.btnUnlockEmail.visibility = View.GONE
+        layout.etEmail.isEnabled = enabled 
+        if (enabled) {
+            layout.etEmail.setTextColor(Color.BLACK)
+            layout.tvEmailLabel.text = "Email"
+        } else {
+            layout.etEmail.setTextColor(Color.parseColor("#888888"))
+            layout.tvEmailLabel.text = "Email (Read-only)"
+        }
+        
+        layout.spinnerGender.isEnabled = enabled
+        layout.etPassword.isEnabled = enabled
+        layout.spinnerEmploymentStatus.isEnabled = enabled
+        layout.spinnerDegree.isEnabled = enabled
+        layout.etSpecialization.isEnabled = enabled
+        layout.cbQualified.isEnabled = enabled
+        layout.cbNa.isEnabled = enabled
+        
+        layout.llEditActions.visibility = if (enabled) View.VISIBLE else View.GONE
+        layout.btnEditProfile.visibility = if (enabled) View.GONE else View.VISIBLE
+    }
+
+    private fun saveProfileChanges() {
+        val layout = binding.layoutProfile
+        val newFirstName = layout.etFirstName.text.toString().trim()
+        val newLastName = layout.etLastName.text.toString().trim()
+        val newEmail = layout.etEmail.text.toString().trim()
+        
+        // Convert display values back to backend-expected formats
+        val displayGender = layout.spinnerGender.selectedItem.toString()
+        val backendGender = if (displayGender == "Male") "M" else "F"
+        
+        val displayEmpStatus = layout.spinnerEmploymentStatus.selectedItem.toString()
+        val backendEmpStatus = when(displayEmpStatus) {
+            "Full-Time" -> "full_time"
+            "Part-Time" -> "part_time"
+            "Contractual" -> "contractual"
+            else -> displayEmpStatus.lowercase().replace("-", "_")
+        }
+        
+        val displayDegree = layout.spinnerDegree.selectedItem.toString()
+        val backendDegree = when(displayDegree) {
+            "Master's Degree" -> "Masters"
+            "Doctoral's Degree" -> "Doctorate"
+            else -> displayDegree
+        }
+
+        Toast.makeText(this, "Updating profile...", Toast.LENGTH_SHORT).show()
+
+        lifecycleScope.launch {
+            try {
+                val updateData = mutableMapOf(
+                    "first_name" to newFirstName,
+                    "last_name" to newLastName,
+                    "email" to newEmail,
+                    "gender" to backendGender,
+                    "employment_status" to backendEmpStatus,
+                    "highest_degree" to backendDegree
+                )
+                
+                val updatedFaculty = RetrofitClient.apiService.updateProfile(updateData)
+                currentUserFaculty = updatedFaculty
+                
+                Toast.makeText(this@MainActivity, "Profile updated successfully!", Toast.LENGTH_SHORT).show()
+                
+                layout.tvProfileName.text = "${updatedFaculty.first_name} ${updatedFaculty.last_name}"
+                binding.tvGreeting.text = "Hello, ${updatedFaculty.first_name}!"
+                
+                // Update local fields with returned data to be sure
+                layout.etEmail.setText(updatedFaculty.email)
+                
+                toggleProfileEdit(false)
+            } catch (e: Exception) {
+                Log.e("MainActivity", "Failed to update profile", e)
+                Toast.makeText(this@MainActivity, "Update failed. Server sync issue.", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 }
