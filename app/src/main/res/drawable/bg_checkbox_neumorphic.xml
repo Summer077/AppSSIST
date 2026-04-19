@@ -1,54 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Checked State -->
+    <!-- Checked State (Enabled or Disabled) -->
     <item android:state_checked="true">
         <layer-list>
-            <item android:width="22dp" android:height="22dp">
+            <item android:width="24dp" android:height="24dp">
                 <shape android:shape="rectangle">
-                    <corners android:radius="6dp" />
-                    <solid android:color="#E9ECEF" />
+                    <corners android:radius="2dp" />
+                    <solid android:color="#000000" />
                 </shape>
             </item>
-            <item android:width="22dp" android:height="22dp" android:right="1.5dp" android:bottom="1.5dp">
-                <shape android:shape="rectangle">
-                    <corners android:radius="6dp" />
-                    <solid android:color="#D1D9E6" />
-                </shape>
-            </item>
-            <item android:width="22dp" android:height="22dp" android:left="1.5dp" android:top="1.5dp" android:right="1dp" android:bottom="1dp">
-                <shape android:shape="rectangle">
-                    <corners android:radius="6dp" />
-                    <solid android:color="#E7EBF0" />
-                </shape>
-            </item>
-            <!-- Check Mark Dot -->
-            <item android:width="10dp" android:height="10dp" android:gravity="center">
-                <shape android:shape="oval">
-                    <solid android:color="#212529" />
-                </shape>
+            <item android:width="16dp" android:height="16dp" android:gravity="center">
+                <vector
+                    android:width="24dp"
+                    android:height="24dp"
+                    android:viewportWidth="24"
+                    android:viewportHeight="24">
+                    <path
+                        android:fillColor="#FFFFFF"
+                        android:pathData="M9,16.17L4.83,12l-1.42,1.41L9,19 21,7l-1.41,-1.41z" />
+                </vector>
             </item>
         </layer-list>
     </item>
 
-    <!-- Unchecked State -->
+    <!-- Unchecked State (Enabled or Disabled) -->
     <item>
         <layer-list>
-            <item android:width="22dp" android:height="22dp">
+            <item android:width="24dp" android:height="24dp">
                 <shape android:shape="rectangle">
-                    <corners android:radius="6dp" />
-                    <solid android:color="#E9ECEF" />
-                </shape>
-            </item>
-            <item android:width="22dp" android:height="22dp" android:right="1.5dp" android:bottom="1.5dp">
-                <shape android:shape="rectangle">
-                    <corners android:radius="6dp" />
-                    <solid android:color="#D1D9E6" />
-                </shape>
-            </item>
-            <item android:width="22dp" android:height="22dp" android:left="1.5dp" android:top="1.5dp" android:right="1dp" android:bottom="1dp">
-                <shape android:shape="rectangle">
-                    <corners android:radius="6dp" />
-                    <solid android:color="#E7EBF0" />
+                    <corners android:radius="2dp" />
+                    <stroke android:width="3dp" android:color="#000000" />
+                    <solid android:color="@android:color/transparent" />
                 </shape>
             </item>
         </layer-list>

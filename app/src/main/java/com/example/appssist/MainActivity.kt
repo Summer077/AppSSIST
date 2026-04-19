@@ -9,6 +9,7 @@ import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.print.PrintAttributes
 import android.print.PrintManager
+import android.text.InputType
 import android.text.method.HideReturnsTransformationMethod
 import android.text.method.PasswordTransformationMethod
 import android.transition.AutoTransition
@@ -50,6 +51,11 @@ class MainActivity : AppCompatActivity() {
     private var selectedSemester: Int? = null
 
     private var activeActionsView: View? = null
+    private var isAuthFailureHandled = false
+
+    // Track selected specializations for the multi-select dropdown
+    private val selectedSpecIds = mutableSetOf<Int>()
+    private val allCourseOptions = mutableListOf<CourseResponse>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -58,6 +64,13 @@ class MainActivity : AppCompatActivity() {
         
         binding = ActivityDashboardBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        // Check token before fetching data
+        val token = TokenManager(this).getToken()
+        if (token.isNullOrEmpty()) {
+            redirectToLogin()
+            return
+        }
 
         fetchUserData()
         fetchDashboardData()
@@ -214,7 +227,7 @@ class MainActivity : AppCompatActivity() {
         lifecycleScope.launch {
             try {
                 val response = RetrofitClient.apiService.getFacultySchedule(facultyId)
-                mySchedules = response.results ?: emptyList()
+                mySchedules = response
                 updateDayDots()
                 val selectedDay = when {
                     binding.layoutSchedule.btnDayMon.isSelected -> "Monday"
@@ -228,6 +241,7 @@ class MainActivity : AppCompatActivity() {
                 displayScheduleForDay(selectedDay)
             } catch (e: Exception) {
                 Log.e("MainActivity", "Failed to load my schedule", e)
+                if (e is HttpException && e.code() == 401) handleSessionFailure("Unauthorized", true)
             }
         }
     }
@@ -444,6 +458,7 @@ class MainActivity : AppCompatActivity() {
                 }
             } catch (e: Exception) {
                 Log.e("MainActivity", "Failed to load faculty into schedule", e)
+                if (e is HttpException && e.code() == 401) handleSessionFailure("Unauthorized", true)
             }
         }
     }
@@ -487,9 +502,9 @@ class MainActivity : AppCompatActivity() {
             try {
                 // Determine which API to call based on type
                 val facultySchedules = when(type) {
-                    "faculty" -> RetrofitClient.apiService.getFacultySchedule(resourceId).results ?: emptyList()
-                    "section" -> RetrofitClient.apiService.getSectionSchedule(resourceId).results ?: emptyList()
-                    "room" -> RetrofitClient.apiService.getRoomSchedule(resourceId).results ?: emptyList()
+                    "faculty" -> RetrofitClient.apiService.getFacultySchedule(resourceId)
+                    "section" -> RetrofitClient.apiService.getSectionSchedule(resourceId)
+                    "room" -> RetrofitClient.apiService.getRoomSchedule(resourceId)
                     else -> emptyList()
                 }
 
@@ -529,6 +544,7 @@ class MainActivity : AppCompatActivity() {
 
             } catch (e: Exception) {
                 Log.e("MainActivity", "Failed to load schedule for dialog", e)
+                if (e is HttpException && e.code() == 401) handleSessionFailure("Unauthorized", true)
             }
         }
 
@@ -596,8 +612,12 @@ class MainActivity : AppCompatActivity() {
                 }
             } catch (e: Exception) {
                 Log.e("MainActivity", "Print failed for $type", e)
-                runOnUiThread {
-                    Toast.makeText(this@MainActivity, "Print Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                if (e is HttpException && e.code() == 401) {
+                    handleSessionFailure("Unauthorized", true)
+                } else {
+                    runOnUiThread {
+                        Toast.makeText(this@MainActivity, "Print Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                    }
                 }
             }
         }
@@ -655,6 +675,7 @@ class MainActivity : AppCompatActivity() {
                 }
             } catch (e: Exception) {
                 Log.e("MainActivity", "Failed to load sections into schedule", e)
+                if (e is HttpException && e.code() == 401) handleSessionFailure("Unauthorized", true)
             }
         }
     }
@@ -694,6 +715,7 @@ class MainActivity : AppCompatActivity() {
                 }
             } catch (e: Exception) {
                 Log.e("MainActivity", "Failed to load rooms into schedule", e)
+                if (e is HttpException && e.code() == 401) handleSessionFailure("Unauthorized", true)
             }
         }
     }
@@ -721,50 +743,42 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun fetchUserData() {
-        val sharedPrefs = getSharedPreferences("AppSSIST_Prefs", MODE_PRIVATE)
-        val accessToken = sharedPrefs.getString("access_token", null)
-
-        if (accessToken.isNullOrEmpty()) {
-            startActivity(Intent(this, LoginActivity::class.java))
-            finish()
-            return
-        }
-
         lifecycleScope.launch {
             try {
-                var data = RetrofitClient.apiService.getUserFacultyData()
+                val data = RetrofitClient.apiService.getUserFacultyData()
                 
-                if (data.id <= 0) {
+                var finalData = data
+                if (finalData.id <= 0) {
                     val facultyList = RetrofitClient.apiService.getFacultyList()
-                    val matchingFaculty = facultyList.find { it.email?.trim()?.equals(data.email.trim(), ignoreCase = true) == true }
+                    val matchingFaculty = facultyList.find { it.email?.trim()?.equals(finalData.email.trim(), ignoreCase = true) == true }
                     if (matchingFaculty != null) {
-                        data = data.copy(id = matchingFaculty.id)
+                        finalData = finalData.copy(id = matchingFaculty.id)
                     }
                 }
                 
-                currentUserFaculty = data
+                currentUserFaculty = finalData
 
-                val greeting = if (data.first_name.isNotEmpty()) {
-                    "Hello, ${data.first_name}!"
+                val greeting = if (finalData.first_name.isNotEmpty()) {
+                    "Hello, ${finalData.first_name}!"
                 } else {
                     "Hello!"
                 }
                 binding.tvGreeting.text = greeting
                 
                 // Update profile UI with data
-                binding.layoutProfile.tvProfileName.text = "${data.first_name} ${data.last_name}"
-                binding.layoutProfile.tvProfileEmailSub.text = data.email
-                binding.layoutProfile.etFirstName.setText(data.first_name)
-                binding.layoutProfile.etLastName.setText(data.last_name)
-                binding.layoutProfile.etEmail.setText(data.email)
+                binding.layoutProfile.tvProfileName.text = "${finalData.first_name} ${finalData.last_name}"
+                binding.layoutProfile.tvProfileEmailSub.text = finalData.email
+                binding.layoutProfile.etFirstName.setText(finalData.first_name)
+                binding.layoutProfile.etLastName.setText(finalData.last_name)
+                binding.layoutProfile.etEmail.setText(finalData.email)
                 
                 // Set initial selection for gender spinner
-                val genderIndex = if (data.gender?.equals("F", ignoreCase = true) == true || data.gender?.equals("Female", ignoreCase = true) == true) 1 else 0
+                val genderIndex = if (finalData.gender?.equals("F", ignoreCase = true) == true || finalData.gender?.equals("Female", ignoreCase = true) == true) 1 else 0
                 binding.layoutProfile.spinnerGender.setSelection(genderIndex)
 
                 // Set initial selection for employment status spinner
                 val employmentOptions = listOf("Full-Time", "Part-Time", "Contractual")
-                val empValue = when(data.employment_status?.lowercase()) {
+                val empValue = when(finalData.employment_status?.lowercase()) {
                     "full_time" -> "Full-Time"
                     "part_time" -> "Part-Time"
                     "contractual" -> "Contractual"
@@ -774,21 +788,133 @@ class MainActivity : AppCompatActivity() {
                 binding.layoutProfile.spinnerEmploymentStatus.setSelection(empIndex)
                 
                 // Set initial selection for degree spinner
-                val degreeOptions = listOf("Master's Degree", "Doctoral's Degree")
                 val degIndex = when {
-                    data.highest_degree?.contains("Master", ignoreCase = true) == true -> 0
-                    data.highest_degree?.contains("Doctor", ignoreCase = true) == true -> 1
+                    finalData.highest_degree?.contains("Master", ignoreCase = true) == true -> 0
+                    finalData.highest_degree?.contains("Doctor", ignoreCase = true) == true -> 1
                     else -> 0
                 }
                 binding.layoutProfile.spinnerDegree.setSelection(degIndex)
                 
+                // PRC License check mapping
+                val isQualified = finalData.prc_licensed?.trim()?.equals("Yes", ignoreCase = true) == true
+                binding.layoutProfile.cbQualified.isChecked = isQualified
+                binding.layoutProfile.cbNa.isChecked = !isQualified
+
+                // Specialization multi-select logic
+                updateSpecializationCheckboxes()
+
                 loadMySchedule()
             } catch (e: HttpException) {
-                handleSessionFailure("Server Error: ${e.code()}")
+                if (e.code() == 401) {
+                    handleSessionFailure("Session expired. Please login again.", true)
+                } else {
+                    handleSessionFailure("Server Error: ${e.code()}")
+                }
             } catch (e: Exception) {
                 handleSessionFailure("Data Error: ${e.message}")
             }
         }
+    }
+
+    private fun updateSpecializationCheckboxes() {
+        lifecycleScope.launch {
+            try {
+                // Fetch all courses
+                val allCourses = RetrofitClient.apiService.getCourses(null, null, null)
+                allCourseOptions.clear()
+                allCourseOptions.addAll(allCourses.distinctBy { it.descriptive_title }.sortedBy { it.descriptive_title })
+                
+                // Initialize selected IDs from user data
+                selectedSpecIds.clear()
+                val userSpecs = currentUserFaculty?.specialization ?: emptyList()
+                allCourseOptions.forEach { course ->
+                    // Match by descriptive_title, course_code, or ID (as string)
+                    if (userSpecs.any { 
+                            it.trim().equals(course.descriptive_title.trim(), ignoreCase = true) || 
+                            it.trim().equals(course.course_code.trim(), ignoreCase = true) ||
+                            it.trim() == course.id.toString()
+                        }) {
+                        selectedSpecIds.add(course.id)
+                    }
+                }
+                
+                updateMultiSelectSpinner()
+            } catch (e: Exception) {
+                Log.e("MainActivity", "Failed to load specialization options", e)
+                if (e is HttpException && e.code() == 401) handleSessionFailure("Unauthorized", true)
+            }
+        }
+    }
+
+    private fun updateMultiSelectSpinner() {
+        val selectedItems = allCourseOptions.filter { selectedSpecIds.contains(it.id) }
+        val displayText = when {
+            selectedItems.isEmpty() -> "Select Specialization"
+            selectedItems.size == 1 -> selectedItems[0].course_code
+            else -> "${selectedItems[0].course_code} (+${selectedItems.size - 1})"
+        }
+        
+        val adapter = ArrayAdapter(this, R.layout.item_spinner_selected, android.R.id.text1, listOf(displayText))
+        adapter.setDropDownViewResource(R.layout.item_spinner_dropdown)
+        binding.layoutProfile.spinnerSpecialization.adapter = adapter
+        
+        // Use setOnTouchListener to open the multi-select dialog instead of the standard spinner dropdown
+        binding.layoutProfile.spinnerSpecialization.setOnTouchListener { _, event ->
+            if (event.action == android.view.MotionEvent.ACTION_UP && binding.layoutProfile.spinnerSpecialization.isEnabled) {
+                showCustomMultiSelectDialog()
+            }
+            true // Always consume to prevent default dropdown
+        }
+    }
+
+    private fun showCustomMultiSelectDialog() {
+        val dialog = Dialog(this)
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+        dialog.setContentView(R.layout.dialog_multi_select)
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        
+        val height = (resources.displayMetrics.heightPixels * 0.70).toInt()
+        dialog.window?.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, height)
+        dialog.window?.setGravity(Gravity.BOTTOM)
+
+        val container = dialog.findViewById<LinearLayout>(R.id.ll_options_container)
+        container.removeAllViews()
+
+        // Temporary set to track changes before "Done" is clicked
+        val tempSelectedIds = selectedSpecIds.toMutableSet()
+
+        allCourseOptions.forEach { course ->
+            val itemView = LayoutInflater.from(this).inflate(R.layout.item_multi_select_option, container, false)
+            val checkbox = itemView.findViewById<CheckBox>(R.id.checkbox_option)
+            val tvCode = itemView.findViewById<TextView>(R.id.tv_option_code)
+            val tvTitle = itemView.findViewById<TextView>(R.id.tv_option_title)
+
+            tvCode.text = course.course_code
+            tvTitle.text = course.descriptive_title
+            checkbox.isChecked = tempSelectedIds.contains(course.id)
+
+            itemView.setOnClickListener {
+                checkbox.isChecked = !checkbox.isChecked
+                if (checkbox.isChecked) {
+                    tempSelectedIds.add(course.id)
+                } else {
+                    tempSelectedIds.remove(course.id)
+                }
+            }
+
+            container.addView(itemView)
+        }
+
+        dialog.findViewById<ImageView>(R.id.btn_close).setOnClickListener { dialog.dismiss() }
+        
+        dialog.findViewById<Button>(R.id.btn_done).setOnClickListener {
+            selectedSpecIds.clear()
+            selectedSpecIds.addAll(tempSelectedIds)
+            updateMultiSelectSpinner()
+            dialog.dismiss()
+        }
+
+        dialog.show()
     }
 
     private fun fetchDashboardData() {
@@ -802,6 +928,12 @@ class MainActivity : AppCompatActivity() {
                 updateCurriculumSpinner()
 
                 sections = RetrofitClient.apiService.getSections()
+            } catch (e: HttpException) {
+                if (e.code() == 401) {
+                    handleSessionFailure("Session expired. Please login again.", true)
+                } else {
+                    Log.e("MainActivity", "Failed to fetch dashboard data", e)
+                }
             } catch (e: Exception) {
                 Log.e("MainActivity", "Failed to fetch dashboard data", e)
             }
@@ -866,6 +998,7 @@ class MainActivity : AppCompatActivity() {
                 container.removeAllViews()
                 tvStatus.text = "Error loading list"
                 container.addView(tvStatus)
+                if (e is HttpException && e.code() == 401) handleSessionFailure("Unauthorized", true)
             }
         }
     }
@@ -1009,6 +1142,7 @@ class MainActivity : AppCompatActivity() {
                 loadCourses()
             } catch (e: Exception) {
                 Log.e("MainActivity", "Failed to load courses for levels", e)
+                if (e is HttpException && e.code() == 401) handleSessionFailure("Unauthorized", true)
             }
         }
     }
@@ -1108,6 +1242,7 @@ class MainActivity : AppCompatActivity() {
                 }
             } catch (e: Exception) {
                 Log.e("MainActivity", "Failed to load courses", e)
+                if (e is HttpException && e.code() == 401) handleSessionFailure("Unauthorized", true)
             }
         }
     }
@@ -1158,6 +1293,7 @@ class MainActivity : AppCompatActivity() {
                 loadCoursesAndPopulateLevels()
             } catch (e: Exception) {
                 Toast.makeText(this@MainActivity, "Failed to add course", Toast.LENGTH_SHORT).show()
+                if (e is HttpException && e.code() == 401) handleSessionFailure("Unauthorized", true)
             }
         }
     }
@@ -1209,6 +1345,7 @@ class MainActivity : AppCompatActivity() {
                 loadCourses()
             } catch (e: Exception) {
                 Log.e("MainActivity", "Failed to update course", e)
+                if (e is HttpException && e.code() == 401) handleSessionFailure("Unauthorized", true)
             }
         }
     }
@@ -1232,6 +1369,7 @@ class MainActivity : AppCompatActivity() {
                 loadCourses()
             } catch (e: Exception) {
                 Log.e("MainActivity", "Failed to delete course", e)
+                if (e is HttpException && e.code() == 401) handleSessionFailure("Unauthorized", true)
             }
         }
     }
@@ -1350,7 +1488,11 @@ class MainActivity : AppCompatActivity() {
                 }
             } catch (e: Exception) {
                 Log.e("MainActivity", "Print failed", e)
-                Toast.makeText(this@MainActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                if (e is HttpException && e.code() == 401) {
+                    handleSessionFailure("Unauthorized", true)
+                } else {
+                    Toast.makeText(this@MainActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
             }
         }
     }
@@ -1378,11 +1520,22 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
-    private fun handleSessionFailure(message: String) {
-        Toast.makeText(this, message, Toast.LENGTH_LONG).show()
-        val sharedPrefs = getSharedPreferences("AppSSIST_Prefs", Context.MODE_PRIVATE)
-        sharedPrefs.edit().clear().apply()
-        startActivity(Intent(this, LoginActivity::class.java))
+    private fun handleSessionFailure(message: String, isAuthError: Boolean = false) {
+        if (isAuthFailureHandled) return
+        if (isAuthError) isAuthFailureHandled = true
+
+        runOnUiThread {
+            val displayMessage = if (isAuthError) "Session expired. Please login again." else message
+            Toast.makeText(this, displayMessage, Toast.LENGTH_LONG).show()
+            RetrofitClient.logout()
+            redirectToLogin()
+        }
+    }
+
+    private fun redirectToLogin() {
+        val intent = Intent(this, LoginActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
         finish()
     }
 
@@ -1419,7 +1572,16 @@ class MainActivity : AppCompatActivity() {
             toggleProfileEdit(true)
         }
 
-        // Removed unlock email listener as it's now read-only
+        // Handle PRC License Checkbox mutual exclusivity
+        layout.cbQualified.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) layout.cbNa.isChecked = false
+            else if (!layout.cbNa.isChecked) layout.cbNa.isChecked = true
+        }
+
+        layout.cbNa.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) layout.cbQualified.isChecked = false
+            else if (!layout.cbQualified.isChecked) layout.cbQualified.isChecked = true
+        }
         
         layout.btnCancelEdit.setOnClickListener {
             toggleProfileEdit(false)
@@ -1447,6 +1609,14 @@ class MainActivity : AppCompatActivity() {
                     else -> 0
                 }
                 layout.spinnerDegree.setSelection(degIndex)
+
+                // Restore PRC License
+                val isQualified = data.prc_licensed?.trim()?.equals("Yes", ignoreCase = true) == true
+                layout.cbQualified.isChecked = isQualified
+                layout.cbNa.isChecked = !isQualified
+
+                // Restore Specialization
+                updateSpecializationCheckboxes()
             }
         }
         
@@ -1458,10 +1628,26 @@ class MainActivity : AppCompatActivity() {
         toggleProfileEdit(false)
 
         layout.btnLogout.setOnClickListener {
-            val sharedPrefs = getSharedPreferences("AppSSIST_Prefs", Context.MODE_PRIVATE)
-            sharedPrefs.edit().clear().apply()
-            startActivity(Intent(this, LoginActivity::class.java))
-            finish()
+            RetrofitClient.logout()
+            redirectToLogin()
+        }
+
+        // Password visibility toggle logic
+        var isPasswordVisible = false
+        layout.ivShowPassword.setOnClickListener {
+            isPasswordVisible = !isPasswordVisible
+            if (isPasswordVisible) {
+                // Show password
+                layout.etPassword.transformationMethod = HideReturnsTransformationMethod.getInstance()
+                // Update icon if you have a "hide" version, otherwise keep current
+                layout.ivShowPassword.setColorFilter(Color.parseColor("#1E2124"))
+            } else {
+                // Hide password
+                layout.etPassword.transformationMethod = PasswordTransformationMethod.getInstance()
+                layout.ivShowPassword.setColorFilter(Color.parseColor("#888888"))
+            }
+            // Maintain cursor at the end
+            layout.etPassword.setSelection(layout.etPassword.text.length)
         }
     }
 
@@ -1471,22 +1657,17 @@ class MainActivity : AppCompatActivity() {
         layout.etFirstName.isEnabled = enabled
         layout.etLastName.isEnabled = enabled
         
-        // Email logic: Allow editing if enabled to fix sync issues
-        layout.btnUnlockEmail.visibility = View.GONE
-        layout.etEmail.isEnabled = enabled 
-        if (enabled) {
-            layout.etEmail.setTextColor(Color.BLACK)
-            layout.tvEmailLabel.text = "Email"
-        } else {
-            layout.etEmail.setTextColor(Color.parseColor("#888888"))
-            layout.tvEmailLabel.text = "Email (Read-only)"
-        }
+        // Email logic: ALWAYS read-only
+        layout.etEmail.isEnabled = false
+        layout.etEmail.setTextColor(Color.parseColor("#888888"))
+        layout.tvEmailLabel.text = "Email (Read-only)"
         
         layout.spinnerGender.isEnabled = enabled
         layout.etPassword.isEnabled = enabled
         layout.spinnerEmploymentStatus.isEnabled = enabled
         layout.spinnerDegree.isEnabled = enabled
-        layout.etSpecialization.isEnabled = enabled
+        layout.spinnerSpecialization.isEnabled = enabled
+        
         layout.cbQualified.isEnabled = enabled
         layout.cbNa.isEnabled = enabled
         
@@ -1519,17 +1700,23 @@ class MainActivity : AppCompatActivity() {
             else -> displayDegree
         }
 
+        // PRC Licensed boolean conversion
+        val isPrcLicensed = layout.cbQualified.isChecked
+
         Toast.makeText(this, "Updating profile...", Toast.LENGTH_SHORT).show()
 
         lifecycleScope.launch {
             try {
+                // Send IDs to backend for Many-to-Many updates
                 val updateData = mutableMapOf(
                     "first_name" to newFirstName,
                     "last_name" to newLastName,
                     "email" to newEmail,
                     "gender" to backendGender,
                     "employment_status" to backendEmpStatus,
-                    "highest_degree" to backendDegree
+                    "highest_degree" to backendDegree,
+                    "prc_licensed" to isPrcLicensed,
+                    "specialization" to selectedSpecIds.toList()
                 )
                 
                 val updatedFaculty = RetrofitClient.apiService.updateProfile(updateData)
@@ -1544,9 +1731,15 @@ class MainActivity : AppCompatActivity() {
                 layout.etEmail.setText(updatedFaculty.email)
                 
                 toggleProfileEdit(false)
+                // Refresh specialization state
+                updateSpecializationCheckboxes()
             } catch (e: Exception) {
                 Log.e("MainActivity", "Failed to update profile", e)
-                Toast.makeText(this@MainActivity, "Update failed. Server sync issue.", Toast.LENGTH_SHORT).show()
+                if (e is HttpException && e.code() == 401) {
+                    handleSessionFailure("Unauthorized", true)
+                } else {
+                    Toast.makeText(this@MainActivity, "Update failed. Server sync issue.", Toast.LENGTH_SHORT).show()
+                }
             }
         }
     }

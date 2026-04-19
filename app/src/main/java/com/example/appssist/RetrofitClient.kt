@@ -17,6 +17,10 @@ object RetrofitClient {
         tokenManager = TokenManager(context)
     }
 
+    fun logout() {
+        tokenManager?.clearToken()
+    }
+
     private val authInterceptor = Interceptor { chain ->
         val requestBuilder = chain.request().newBuilder()
         tokenManager?.getToken()?.let {

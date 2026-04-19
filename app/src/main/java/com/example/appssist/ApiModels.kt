@@ -13,7 +13,7 @@ data class TokenResponse(
 )
 
 data class FacultyData(
-    val id: Int,
+    val id: Int = 0,
     @SerializedName("first_name")
     val first_name: String = "",
     @SerializedName("last_name")
@@ -26,6 +26,10 @@ data class FacultyData(
     val employment_status: String? = null,
     @SerializedName("highest_degree")
     val highest_degree: String? = null,
+    @SerializedName("prc_licensed")
+    val prc_licensed: String? = "No",
+    @SerializedName("specialization")
+    val specialization: List<String> = emptyList(),
     @SerializedName("profile_picture_url")
     val profile_picture_url: String? = null,
     @SerializedName("total_units")

@@ -146,7 +146,7 @@
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/lexend"
                     android:text="First Name"
-                    android:textColor="#495057"
+                    android:textColor="#888888"
                     android:textSize="12sp"
                     android:layout_marginBottom="8dp"/>
 
@@ -169,7 +169,7 @@
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/lexend"
                     android:text="Last Name"
-                    android:textColor="#495057"
+                    android:textColor="#888888"
                     android:textSize="12sp"
                     android:layout_marginBottom="8dp"/>
 
@@ -186,14 +186,14 @@
                     android:textSize="14sp"
                     android:layout_marginBottom="16dp"/>
 
-                <!-- Email (With Unlock logic) -->
+                <!-- Email (Read-only) -->
                 <TextView
                     android:id="@+id/tv_email_label"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/lexend"
                     android:text="Email (Read-only)"
-                    android:textColor="#495057"
+                    android:textColor="#888888"
                     android:textSize="12sp"
                     android:layout_marginBottom="8dp"/>
 
@@ -207,7 +207,6 @@
                         android:id="@+id/et_email"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
-                        android:layout_toStartOf="@+id/btn_unlock_email"
                         android:background="@android:color/transparent"
                         android:enabled="false"
                         android:fontFamily="@font/lexend"
@@ -215,21 +214,6 @@
                         android:text="jenriquez@cpe.edu.ph"
                         android:textColor="#888888"
                         android:textSize="14sp" />
-
-                    <TextView
-                        android:id="@+id/btn_unlock_email"
-                        android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
-                        android:layout_alignParentEnd="true"
-                        android:background="?attr/selectableItemBackground"
-                        android:gravity="center"
-                        android:paddingHorizontal="16dp"
-                        android:text="Unlock"
-                        android:textColor="#1E2124"
-                        android:textSize="10sp"
-                        android:textStyle="bold"
-                        android:fontFamily="@font/lexend"
-                        android:visibility="gone" />
                 </RelativeLayout>
 
                 <!-- Gender -->
@@ -249,15 +233,6 @@
                     android:background="@drawable/bg_neumorphic_recessed"
                     android:layout_marginBottom="16dp">
 
-                    <ImageView
-                        android:layout_width="10dp"
-                        android:layout_height="10dp"
-                        android:layout_gravity="end|center_vertical"
-                        android:layout_marginEnd="10dp"
-                        android:src="@android:drawable/arrow_down_float"
-                        app:tint="@color/text_primary"
-                        android:importantForAccessibility="no" />
-
                     <Spinner
                         android:id="@+id/spinner_gender"
                         android:layout_width="match_parent"
@@ -269,6 +244,15 @@
                         android:overlapAnchor="false"
                         android:popupBackground="@drawable/bg_spinner_popup"
                         android:enabled="false" />
+
+                    <ImageView
+                        android:layout_width="12dp"
+                        android:layout_height="12dp"
+                        android:layout_gravity="end|center_vertical"
+                        android:layout_marginEnd="12dp"
+                        android:src="@android:drawable/arrow_down_float"
+                        app:tint="@color/text_primary"
+                        android:importantForAccessibility="no" />
                 </FrameLayout>
 
                 <!-- Password -->
@@ -277,7 +261,7 @@
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/lexend"
                     android:text="Password"
-                    android:textColor="#495057"
+                    android:textColor="#888888"
                     android:textSize="12sp"
                     android:layout_marginBottom="8dp"/>
 
@@ -296,18 +280,21 @@
                         android:fontFamily="@font/lexend"
                         android:inputType="textPassword"
                         android:paddingHorizontal="16dp"
-                        android:text="password"
+                        android:hint="Password"
                         android:textColor="#212529"
                         android:textSize="14sp" />
 
                     <ImageView
+                        android:id="@+id/iv_show_password"
                         android:layout_width="20dp"
                         android:layout_height="20dp"
                         android:layout_alignParentEnd="true"
                         android:layout_centerVertical="true"
                         android:layout_marginEnd="16dp"
                         android:src="@drawable/see"
-                        app:tint="#888888" />
+                        app:tint="#888888"
+                        android:clickable="true"
+                        android:focusable="true" />
                 </RelativeLayout>
 
                 <!-- Employment Status -->
@@ -327,15 +314,6 @@
                     android:background="@drawable/bg_neumorphic_recessed"
                     android:layout_marginBottom="32dp">
 
-                    <ImageView
-                        android:layout_width="10dp"
-                        android:layout_height="10dp"
-                        android:layout_gravity="end|center_vertical"
-                        android:layout_marginEnd="10dp"
-                        android:src="@android:drawable/arrow_down_float"
-                        app:tint="@color/text_primary"
-                        android:importantForAccessibility="no" />
-
                     <Spinner
                         android:id="@+id/spinner_employment_status"
                         android:layout_width="match_parent"
@@ -347,6 +325,15 @@
                         android:overlapAnchor="false"
                         android:popupBackground="@drawable/bg_spinner_popup"
                         android:enabled="false" />
+
+                    <ImageView
+                        android:layout_width="12dp"
+                        android:layout_height="12dp"
+                        android:layout_gravity="end|center_vertical"
+                        android:layout_marginEnd="12dp"
+                        android:src="@android:drawable/arrow_down_float"
+                        app:tint="@color/text_primary"
+                        android:importantForAccessibility="no" />
                 </FrameLayout>
 
                 <!-- Educational Attainment Header -->
@@ -377,15 +364,6 @@
                     android:background="@drawable/bg_neumorphic_recessed"
                     android:layout_marginBottom="16dp">
 
-                    <ImageView
-                        android:layout_width="10dp"
-                        android:layout_height="10dp"
-                        android:layout_gravity="end|center_vertical"
-                        android:layout_marginEnd="10dp"
-                        android:src="@android:drawable/arrow_down_float"
-                        app:tint="@color/text_primary"
-                        android:importantForAccessibility="no" />
-
                     <Spinner
                         android:id="@+id/spinner_degree"
                         android:layout_width="match_parent"
@@ -397,6 +375,15 @@
                         android:overlapAnchor="false"
                         android:popupBackground="@drawable/bg_spinner_popup"
                         android:enabled="false" />
+
+                    <ImageView
+                        android:layout_width="12dp"
+                        android:layout_height="12dp"
+                        android:layout_gravity="end|center_vertical"
+                        android:layout_marginEnd="12dp"
+                        android:src="@android:drawable/arrow_down_float"
+                        app:tint="@color/text_primary"
+                        android:importantForAccessibility="no" />
                 </FrameLayout>
 
                 <!-- Specialization -->
@@ -404,59 +391,89 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/lexend"
-                    android:text="Specialization"
-                    android:textColor="#495057"
-                    android:textSize="12sp"
-                    android:layout_marginBottom="8dp" />
+                    android:text="specialization"
+                    android:textColor="#888888"
+                    android:textSize="9sp"
+                    android:layout_marginStart="4dp"
+                    android:layout_marginBottom="2dp" />
 
-                <EditText
-                    android:id="@+id/et_specialization"
+                <FrameLayout
                     android:layout_width="match_parent"
-                    android:layout_height="48dp"
+                    android:layout_height="40dp"
                     android:background="@drawable/bg_neumorphic_recessed"
-                    android:enabled="false"
-                    android:fontFamily="@font/lexend"
-                    android:paddingHorizontal="16dp"
-                    android:textColor="#212529"
-                    android:textSize="14sp"
-                    android:layout_marginBottom="16dp" />
+                    android:layout_marginBottom="16dp">
 
-                <!-- PRC License -->
+                    <Spinner
+                        android:id="@+id/spinner_specialization"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@android:color/transparent"
+                        android:spinnerMode="dropdown"
+                        android:paddingStart="10dp"
+                        android:paddingEnd="30dp"
+                        android:overlapAnchor="false"
+                        android:popupBackground="@drawable/bg_spinner_popup"
+                        android:enabled="false" />
+
+                    <ImageView
+                        android:layout_width="12dp"
+                        android:layout_height="12dp"
+                        android:layout_gravity="end|center_vertical"
+                        android:layout_marginEnd="12dp"
+                        android:src="@android:drawable/arrow_down_float"
+                        app:tint="@color/text_primary"
+                        android:importantForAccessibility="no" />
+                </FrameLayout>
+
+                <!-- PRC License Section -->
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/lexend"
-                    android:text="PRC License"
-                    android:textColor="#495057"
-                    android:textSize="12sp"
-                    android:layout_marginBottom="8dp" />
+                    android:text="PRC License:"
+                    android:textColor="#333333"
+                    android:textSize="18sp"
+                    android:layout_marginBottom="12dp" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
+                    android:gravity="center_vertical"
                     android:layout_marginBottom="40dp">
 
                     <CheckBox
                         android:id="@+id/cb_qualified"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:enabled="false"
                         android:fontFamily="@font/lexend"
                         android:text="Qualified"
-                        android:textColor="#212529"
-                        android:buttonTint="#1E2124"/>
+                        android:textColor="#333333"
+                        android:textSize="18sp"
+                        android:button="@drawable/bg_checkbox_neumorphic"
+                        android:buttonTint="@null"
+                        android:paddingStart="12dp"
+                        android:minWidth="0dp"
+                        android:minHeight="0dp"
+                        android:clickable="false"
+                        android:focusable="false"/>
 
                     <CheckBox
                         android:id="@+id/cb_na"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="24dp"
-                        android:enabled="false"
+                        android:layout_marginStart="32dp"
                         android:fontFamily="@font/lexend"
                         android:text="NA"
-                        android:textColor="#212529"
-                        android:buttonTint="#1E2124"/>
+                        android:textColor="#333333"
+                        android:textSize="18sp"
+                        android:button="@drawable/bg_checkbox_neumorphic"
+                        android:buttonTint="@null"
+                        android:paddingStart="12dp"
+                        android:minWidth="0dp"
+                        android:minHeight="0dp"
+                        android:clickable="false"
+                        android:focusable="false"/>
                 </LinearLayout>
 
                 <!-- Edit Action Buttons -->

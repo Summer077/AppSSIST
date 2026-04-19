@@ -12,7 +12,7 @@ interface ApiService {
 
     @PATCH("api/user-profile-update/")
     suspend fun updateProfile(
-        @Body data: Map<String, String?>
+        @Body data: @JvmSuppressWildcards Map<String, Any?>
     ): FacultyData
 
     @GET("api/dashboard-stats/")
@@ -56,17 +56,17 @@ interface ApiService {
     @GET("api/faculty/{id}/schedule-data/")
     suspend fun getFacultySchedule(
         @Path("id") facultyId: Int
-    ): ScheduleListResponse
+    ): List<ScheduleItemResponse>
 
     @GET("api/section/{id}/schedule-data/")
     suspend fun getSectionSchedule(
         @Path("id") sectionId: Int
-    ): ScheduleListResponse
+    ): List<ScheduleItemResponse>
 
     @GET("api/room/{id}/schedule-data/")
     suspend fun getRoomSchedule(
         @Path("id") roomId: Int
-    ): ScheduleListResponse
+    ): List<ScheduleItemResponse>
 
     @GET("api/schedule/available-resources/")
     suspend fun getAvailableResources(): AvailableResourcesResponse
