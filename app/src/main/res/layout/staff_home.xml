@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingBottom="40dp">
+
+    <!-- Greeting Section -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingHorizontal="24dp"
+        android:paddingTop="20dp"
+        android:paddingBottom="10dp">
+
+        <TextView
+            android:id="@+id/tv_staff_greeting"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Hello, User!"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_primary"
+            android:fontFamily="@font/lexend" />
+    </LinearLayout>
+
+    <!-- Welcome Content -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:paddingHorizontal="24dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Academic Scheduling System Integrating\nScheduling &amp; Timetables"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_primary"
+            android:fontFamily="@font/lexend"
+            android:gravity="center"
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="12dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="A web-based solution designed to simplify and automate academic scheduling, ensuring organized, conflict-free, and efficient timetable management for the faculty."
+            android:textSize="12sp"
+            android:textColor="#555555"
+            android:fontFamily="@font/lexend"
+            android:gravity="center"
+            android:layout_marginBottom="32dp"
+            android:paddingHorizontal="10dp" />
+
+        <!-- Feature Carousel Card (First Item) -->
+        <FrameLayout
+            android:id="@+id/staff_feature_carousel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_neumorphic_raised"
+            android:padding="24dp"
+            android:layout_marginBottom="12dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <ImageView
+                    android:id="@+id/iv_staff_feature_logo"
+                    android:layout_width="65dp"
+                    android:layout_height="65dp"
+                    android:src="@drawable/staff_schedule"
+                    android:background="@drawable/bg_neumorphic_recessed"
+                    android:padding="14dp" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_marginStart="20dp">
+
+                    <TextView
+                        android:id="@+id/tv_staff_feature_title"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Automated Schedule Generation"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_primary"
+                        android:fontFamily="@font/lexend"
+                        android:layout_marginBottom="6dp" />
+
+                    <TextView
+                        android:id="@+id/tv_staff_feature_desc"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Automatically generates class schedules based on room availability, faculty load, and subject requirements, ensuring conflict-free assignments."
+                        android:textSize="10sp"
+                        android:textColor="#555555"
+                        android:fontFamily="@font/lexend"
+                        android:lineHeight="16sp" />
+                </LinearLayout>
+            </LinearLayout>
+        </FrameLayout>
+
+        <!-- Carousel Indicators -->
+        <LinearLayout
+            android:id="@+id/ll_staff_carousel_indicators"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_gravity="center"
+            android:layout_marginBottom="32dp">
+            <View android:layout_width="10dp" android:layout_height="10dp" android:background="@drawable/bg_circle_generic" android:backgroundTint="#1E2124" android:layout_margin="5dp"/>
+            <View android:layout_width="10dp" android:layout_height="10dp" android:background="@drawable/bg_circle_generic" android:backgroundTint="#D1D5DB" android:layout_margin="5dp"/>
+            <View android:layout_width="10dp" android:layout_height="10dp" android:background="@drawable/bg_circle_generic" android:backgroundTint="#D1D5DB" android:layout_margin="5dp"/>
+            <View android:layout_width="10dp" android:layout_height="10dp" android:background="@drawable/bg_circle_generic" android:backgroundTint="#D1D5DB" android:layout_margin="5dp"/>
+        </LinearLayout>
+
+        <!-- Promo Section -->
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_neumorphic_recessed"
+            android:padding="24dp"
+            android:layout_marginBottom="20dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Ready to view your\nschedule?"
+                    android:textSize="22sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    android:fontFamily="@font/lexend"
+                    android:gravity="center"
+                    android:layout_marginBottom="16dp" />
+
+                <Button
+                    android:id="@+id/btn_staff_view_schedule"
+                    android:layout_width="220dp"
+                    android:layout_height="52dp"
+                    android:text="VIEW MY SCHEDULE ➤"
+                    android:textAllCaps="true"
+                    android:fontFamily="@font/lexend"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:backgroundTint="#1E2124"
+                    android:textColor="#FFFFFF"
+                    app:cornerRadius="26dp" />
+            </LinearLayout>
+        </FrameLayout>
+    </LinearLayout>
+</LinearLayout>

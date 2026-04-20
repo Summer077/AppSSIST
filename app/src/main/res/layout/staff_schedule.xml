@@ -1,0 +1,330 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/layout_staff_schedule_root"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:visibility="gone"
+    tools:visibility="visible"
+    android:background="@color/background_gray">
+
+    <!-- Header Section -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="160dp">
+
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:src="@drawable/schedule_bg"
+            android:scaleType="centerCrop"
+            android:contentDescription="Schedule Header Background" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:paddingHorizontal="20dp"
+            android:paddingTop="50dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="My Schedule"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                android:textColor="#FFFFFF"
+                android:fontFamily="@font/lexend" />
+        </LinearLayout>
+    </FrameLayout>
+
+    <!-- My Schedule Content Area -->
+    <LinearLayout
+        android:id="@+id/ll_staff_content_card"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="-25dp"
+        android:orientation="vertical"
+        android:background="@drawable/bg_bottom_nav"
+        android:backgroundTint="#E7EBF0"
+        android:elevation="4dp"
+        android:paddingTop="20dp"
+        android:paddingBottom="40dp"
+        android:minHeight="600dp">
+
+        <!-- Action Buttons -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingHorizontal="20dp"
+            android:weightSum="2"
+            android:layout_marginBottom="20dp">
+
+            <FrameLayout
+                android:id="@+id/btn_staff_download_pdf"
+                android:layout_width="0dp"
+                android:layout_height="44dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_button_pdf"
+                android:clickable="true"
+                android:focusable="true"
+                android:layout_marginEnd="8dp">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="Download PDF"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:textColor="#FFFFFF"
+                    android:fontFamily="@font/lexend" />
+            </FrameLayout>
+
+            <FrameLayout
+                android:id="@+id/btn_staff_print"
+                android:layout_width="0dp"
+                android:layout_height="44dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_button_print"
+                android:clickable="true"
+                android:focusable="true">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="Print"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:textColor="#FFFFFF"
+                    android:fontFamily="@font/lexend" />
+            </FrameLayout>
+        </LinearLayout>
+
+        <!-- Day Selector -->
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:scrollbars="none"
+            android:paddingHorizontal="10dp"
+            android:layout_marginBottom="16dp">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <!-- Monday -->
+                <LinearLayout
+                    android:id="@+id/btn_staff_day_mon"
+                    android:layout_width="70dp"
+                    android:layout_height="70dp"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:background="@drawable/bg_day_item"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:layout_margin="5dp">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Mon"
+                        android:textStyle="bold"
+                        android:fontFamily="@font/lexend"
+                        android:textColor="#1E2124" />
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginTop="4dp" />
+                </LinearLayout>
+
+                <!-- Tuesday -->
+                <LinearLayout
+                    android:id="@+id/btn_staff_day_tue"
+                    android:layout_width="70dp"
+                    android:layout_height="70dp"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:background="@drawable/bg_day_item"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:layout_margin="5dp">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Tue"
+                        android:textStyle="bold"
+                        android:fontFamily="@font/lexend"
+                        android:textColor="#1E2124" />
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginTop="4dp" />
+                </LinearLayout>
+
+                <!-- Wednesday -->
+                <LinearLayout
+                    android:id="@+id/btn_staff_day_wed"
+                    android:layout_width="70dp"
+                    android:layout_height="70dp"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:background="@drawable/bg_day_item"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:layout_margin="5dp">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Wed"
+                        android:textStyle="bold"
+                        android:fontFamily="@font/lexend"
+                        android:textColor="#1E2124" />
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginTop="4dp" />
+                </LinearLayout>
+
+                <!-- Thursday -->
+                <LinearLayout
+                    android:id="@+id/btn_staff_day_thurs"
+                    android:layout_width="70dp"
+                    android:layout_height="70dp"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:background="@drawable/bg_day_item"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:layout_margin="5dp">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Thurs"
+                        android:textStyle="bold"
+                        android:fontFamily="@font/lexend"
+                        android:textColor="#1E2124" />
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginTop="4dp" />
+                </LinearLayout>
+
+                <!-- Friday -->
+                <LinearLayout
+                    android:id="@+id/btn_staff_day_fri"
+                    android:layout_width="70dp"
+                    android:layout_height="70dp"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:background="@drawable/bg_day_item"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:layout_margin="5dp">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Fri"
+                        android:textStyle="bold"
+                        android:fontFamily="@font/lexend"
+                        android:textColor="#1E2124" />
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginTop="4dp" />
+                </LinearLayout>
+
+                <!-- Saturday -->
+                <LinearLayout
+                    android:id="@+id/btn_staff_day_sat"
+                    android:layout_width="70dp"
+                    android:layout_height="70dp"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:background="@drawable/bg_day_item"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:layout_margin="5dp">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Sat"
+                        android:textStyle="bold"
+                        android:fontFamily="@font/lexend"
+                        android:textColor="#1E2124" />
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginTop="4dp" />
+                </LinearLayout>
+            </LinearLayout>
+        </HorizontalScrollView>
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <!-- Timetable Grid and Cards Container -->
+            <RelativeLayout
+                android:id="@+id/rl_staff_timetable_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingHorizontal="16dp"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:id="@+id/ll_staff_timetable_grid"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical" />
+
+                <View
+                    android:layout_width="1.5dp"
+                    android:layout_height="match_parent"
+                    android:layout_marginStart="65dp"
+                    android:background="#D1D5DB"
+                    android:layout_alignTop="@id/ll_staff_timetable_grid"
+                    android:layout_alignBottom="@id/ll_staff_timetable_grid" />
+
+                <FrameLayout
+                    android:id="@+id/fl_staff_timetable_cards"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="65dp"
+                    android:layout_alignTop="@id/ll_staff_timetable_grid" />
+            </RelativeLayout>
+
+            <LinearLayout
+                android:id="@+id/ll_staff_no_schedule_state"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:paddingTop="30dp"
+                android:visibility="visible">
+                <ImageView
+                    android:layout_width="180dp"
+                    android:layout_height="180dp"
+                    android:src="@drawable/no_schedule"
+                    android:scaleType="fitCenter" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="No Schedule Yet."
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:fontFamily="@font/lexend"
+                    android:textColor="#1E2124"
+                    android:layout_marginTop="16dp" />
+            </LinearLayout>
+        </FrameLayout>
+    </LinearLayout>
+</LinearLayout>

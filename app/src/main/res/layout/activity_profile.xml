@@ -257,6 +257,7 @@
 
                 <!-- Password -->
                 <TextView
+                    android:id="@+id/tv_password_label"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/lexend"
@@ -266,6 +267,7 @@
                     android:layout_marginBottom="8dp"/>
 
                 <RelativeLayout
+                    android:id="@+id/rl_password_container"
                     android:layout_width="match_parent"
                     android:layout_height="48dp"
                     android:background="@drawable/bg_neumorphic_recessed"
@@ -296,6 +298,73 @@
                         android:clickable="true"
                         android:focusable="true" />
                 </RelativeLayout>
+
+                <!-- Change Password Fields -->
+                <LinearLayout
+                    android:id="@+id/ll_change_password_container"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="gone">
+
+                    <!-- New Password -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/lexend"
+                        android:text="Change Password"
+                        android:textColor="#888888"
+                        android:textSize="12sp"
+                        android:layout_marginBottom="8dp"/>
+
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:background="@drawable/bg_neumorphic_recessed"
+                        android:layout_marginBottom="16dp">
+
+                        <EditText
+                            android:id="@+id/et_new_password"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:background="@android:color/transparent"
+                            android:fontFamily="@font/lexend"
+                            android:inputType="textPassword"
+                            android:paddingHorizontal="16dp"
+                            android:hint="New Password"
+                            android:textColor="#212529"
+                            android:textSize="14sp" />
+                    </RelativeLayout>
+
+                    <!-- Confirm New Password -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/lexend"
+                        android:text="Confirm New Password"
+                        android:textColor="#888888"
+                        android:textSize="12sp"
+                        android:layout_marginBottom="8dp"/>
+
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:background="@drawable/bg_neumorphic_recessed"
+                        android:layout_marginBottom="16dp">
+
+                        <EditText
+                            android:id="@+id/et_confirm_password"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:background="@android:color/transparent"
+                            android:fontFamily="@font/lexend"
+                            android:inputType="textPassword"
+                            android:paddingHorizontal="16dp"
+                            android:hint="Confirm New Password"
+                            android:textColor="#212529"
+                            android:textSize="14sp" />
+                    </RelativeLayout>
+                </LinearLayout>
 
                 <!-- Employment Status -->
                 <TextView
@@ -442,7 +511,7 @@
                     android:gravity="center_vertical"
                     android:layout_marginBottom="40dp">
 
-                    <CheckBox
+                    <com.google.android.material.checkbox.MaterialCheckBox
                         android:id="@+id/cb_qualified"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -451,14 +520,15 @@
                         android:textColor="#333333"
                         android:textSize="18sp"
                         android:button="@drawable/bg_checkbox_neumorphic"
-                        android:buttonTint="@null"
+                        app:buttonTint="@null"
+                        android:background="@android:color/transparent"
                         android:paddingStart="12dp"
                         android:minWidth="0dp"
                         android:minHeight="0dp"
                         android:clickable="false"
                         android:focusable="false"/>
 
-                    <CheckBox
+                    <com.google.android.material.checkbox.MaterialCheckBox
                         android:id="@+id/cb_na"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -468,7 +538,8 @@
                         android:textColor="#333333"
                         android:textSize="18sp"
                         android:button="@drawable/bg_checkbox_neumorphic"
-                        android:buttonTint="@null"
+                        app:buttonTint="@null"
+                        android:background="@android:color/transparent"
                         android:paddingStart="12dp"
                         android:minWidth="0dp"
                         android:minHeight="0dp"

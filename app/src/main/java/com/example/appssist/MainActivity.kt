@@ -7,6 +7,8 @@ import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.print.PrintAttributes
 import android.print.PrintManager
 import android.text.InputType
@@ -56,6 +58,23 @@ class MainActivity : AppCompatActivity() {
     // Track selected specializations for the multi-select dropdown
     private val selectedSpecIds = mutableSetOf<Int>()
     private val allCourseOptions = mutableListOf<CourseResponse>()
+
+    // Staff Carousel Data
+    private var currentCarouselIndex = 0
+    private val carouselFeatures = listOf(
+        Triple("Automated Schedule Generation", "Automatically generates class schedules based on room availability, faculty load, and subject requirements, ensuring conflict-free assignments.", R.drawable.staff_schedule),
+        Triple("Conflict Detection and Validation", "Ensures all schedules are free from overlaps. The system alerts the admin of any time or room conflicts during manual adjustments.", R.drawable.staff_conflict),
+        Triple("Faculty & Room Management", "Centralized management of faculty profiles, teaching loads, and classroom details for efficient scheduling and resource allocation.", R.drawable.staff_faculty),
+        Triple("Real-time Schedule Updates", "Instantly reflects any schedule or room changes made by the admin, allowing faculty to view updated timetables in real time.", R.drawable.staff_realtime)
+    )
+    private val carouselHandler = Handler(Looper.getMainLooper())
+    private val carouselRunnable = object : Runnable {
+        override fun run() {
+            currentCarouselIndex = (currentCarouselIndex + 1) % carouselFeatures.size
+            updateStaffCarouselUI()
+            carouselHandler.postDelayed(this, 5000)
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -129,6 +148,15 @@ class MainActivity : AppCompatActivity() {
         binding.navCourse.setOnClickListener { updateNavUI("course") }
         binding.navSchedule.setOnClickListener { updateNavUI("schedule") }
         binding.navProfile.setOnClickListener { updateNavUI("profile") }
+        
+        // Staff Nav Listeners
+        val staffHome = findViewById<View>(R.id.nav_staff_home)
+        val staffSchedule = findViewById<View>(R.id.nav_staff_schedule)
+        val staffProfile = findViewById<View>(R.id.nav_staff_profile)
+        
+        staffHome?.setOnClickListener { updateNavUI("home") }
+        staffSchedule?.setOnClickListener { updateNavUI("schedule") }
+        staffProfile?.setOnClickListener { updateNavUI("profile") }
     }
 
     private fun setupCourseBackend() {
@@ -139,27 +167,25 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupScheduleBackend() {
-        // Tab Listeners
-        val tabs = listOf(
+        // --- Admin Schedule Setup ---
+        val adminTabs = listOf(
             binding.layoutSchedule.tabMySchedule,
             binding.layoutSchedule.tabFaculty,
             binding.layoutSchedule.tabSection,
             binding.layoutSchedule.tabRoom
         )
 
-        tabs.forEach { tab ->
+        adminTabs.forEach { tab ->
             tab.setBackgroundResource(R.drawable.bg_neumorphic_tab)
             tab.setOnClickListener {
-                updateScheduleTabsUI(tab, tabs)
-                
-                // Switch between sections
+                updateScheduleTabsUI(tab, adminTabs)
                 when(tab.id) {
                     R.id.tab_my_schedule -> {
                         binding.layoutSchedule.llMyScheduleSection.visibility = View.VISIBLE
                         binding.layoutSchedule.llFacultySection.visibility = View.GONE
                         binding.layoutSchedule.llSectionSection.visibility = View.GONE
                         binding.layoutSchedule.llRoomSection.visibility = View.GONE
-                        loadMySchedule()
+                        loadMySchedule(isAdmin = true)
                     }
                     R.id.tab_faculty -> {
                         binding.layoutSchedule.llMyScheduleSection.visibility = View.GONE
@@ -185,11 +211,10 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
-        // Default select first tab
         binding.layoutSchedule.tabMySchedule.performClick()
 
-        // Day Selector Listeners
-        val days = listOf(
+        // Admin Day Selector
+        val adminDays = listOf(
             binding.layoutSchedule.btnDayMon,
             binding.layoutSchedule.btnDayTue,
             binding.layoutSchedule.btnDayWed,
@@ -197,50 +222,88 @@ class MainActivity : AppCompatActivity() {
             binding.layoutSchedule.btnDayFri,
             binding.layoutSchedule.btnDaySat
         )
-
-        days.forEach { dayView ->
+        adminDays.forEach { dayView ->
             dayView.setOnClickListener {
-                days.forEach { it.isSelected = false }
+                adminDays.forEach { it.isSelected = false }
                 dayView.isSelected = true
-                
-                val dayName = when(dayView.id) {
-                    R.id.btn_day_mon -> "Monday"
-                    R.id.btn_day_tue -> "Tuesday"
-                    R.id.btn_day_wed -> "Wednesday"
-                    R.id.btn_day_thurs -> "Thursday"
-                    R.id.btn_day_fri -> "Friday"
-                    R.id.btn_day_sat -> "Saturday"
-                    else -> ""
-                }
-                displayScheduleForDay(dayName)
+                displayScheduleForDay(getDayName(dayView.id), isAdmin = true)
             }
         }
-        
-        // Default select Monday
         binding.layoutSchedule.btnDayMon.performClick()
+
+        // --- Staff Schedule Setup ---
+        val staffDays = listOf(
+            binding.layoutStaffSchedule.btnStaffDayMon,
+            binding.layoutStaffSchedule.btnStaffDayTue,
+            binding.layoutStaffSchedule.btnStaffDayWed,
+            binding.layoutStaffSchedule.btnStaffDayThurs,
+            binding.layoutStaffSchedule.btnStaffDayFri,
+            binding.layoutStaffSchedule.btnStaffDaySat
+        )
+        staffDays.forEach { dayView ->
+            dayView.setOnClickListener {
+                staffDays.forEach { it.isSelected = false }
+                dayView.isSelected = true
+                displayScheduleForDay(getStaffDayName(dayView.id), isAdmin = false)
+            }
+        }
+        binding.layoutStaffSchedule.btnStaffDayMon.performClick()
     }
 
-    private fun loadMySchedule() {
+    private fun getDayName(viewId: Int): String = when(viewId) {
+        R.id.btn_day_mon -> "Monday"
+        R.id.btn_day_tue -> "Tuesday"
+        R.id.btn_day_wed -> "Wednesday"
+        R.id.btn_day_thurs -> "Thursday"
+        R.id.btn_day_fri -> "Friday"
+        R.id.btn_day_sat -> "Saturday"
+        else -> "Monday"
+    }
+
+    private fun getStaffDayName(viewId: Int): String = when(viewId) {
+        R.id.btn_staff_day_mon -> "Monday"
+        R.id.btn_staff_day_tue -> "Tuesday"
+        R.id.btn_staff_day_wed -> "Wednesday"
+        R.id.btn_staff_day_thurs -> "Thursday"
+        R.id.btn_staff_day_fri -> "Friday"
+        R.id.btn_staff_day_sat -> "Saturday"
+        else -> "Monday"
+    }
+
+    private fun loadMySchedule(isAdmin: Boolean) {
         val facultyId = currentUserFaculty?.id ?: return
         if (facultyId <= 0) return
 
         lifecycleScope.launch {
             try {
                 val response = RetrofitClient.apiService.getFacultySchedule(facultyId)
-                mySchedules = response
-                updateDayDots()
-                val selectedDay = when {
-                    binding.layoutSchedule.btnDayMon.isSelected -> "Monday"
-                    binding.layoutSchedule.btnDayTue.isSelected -> "Tuesday"
-                    binding.layoutSchedule.btnDayWed.isSelected -> "Wednesday"
-                    binding.layoutSchedule.btnDayThurs.isSelected -> "Thursday"
-                    binding.layoutSchedule.btnDayFri.isSelected -> "Friday"
-                    binding.layoutSchedule.btnDaySat.isSelected -> "Saturday"
-                    else -> "Monday"
+                mySchedules = response.schedules ?: emptyList()
+                updateDayDots(isAdmin)
+                
+                val selectedDay = if (isAdmin) {
+                    when {
+                        binding.layoutSchedule.btnDayMon.isSelected -> "Monday"
+                        binding.layoutSchedule.btnDayTue.isSelected -> "Tuesday"
+                        binding.layoutSchedule.btnDayWed.isSelected -> "Wednesday"
+                        binding.layoutSchedule.btnDayThurs.isSelected -> "Thursday"
+                        binding.layoutSchedule.btnDayFri.isSelected -> "Friday"
+                        binding.layoutSchedule.btnDaySat.isSelected -> "Saturday"
+                        else -> "Monday"
+                    }
+                } else {
+                    when {
+                        binding.layoutStaffSchedule.btnStaffDayMon.isSelected -> "Monday"
+                        binding.layoutStaffSchedule.btnStaffDayTue.isSelected -> "Tuesday"
+                        binding.layoutStaffSchedule.btnStaffDayWed.isSelected -> "Wednesday"
+                        binding.layoutStaffSchedule.btnStaffDayThurs.isSelected -> "Thursday"
+                        binding.layoutStaffSchedule.btnStaffDayFri.isSelected -> "Friday"
+                        binding.layoutStaffSchedule.btnStaffDaySat.isSelected -> "Saturday"
+                        else -> "Monday"
+                    }
                 }
-                displayScheduleForDay(selectedDay)
+                displayScheduleForDay(selectedDay, isAdmin)
             } catch (e: Exception) {
-                Log.e("MainActivity", "Failed to load my schedule", e)
+                Log.e("MainActivity", "Failed to load schedule", e)
                 if (e is HttpException && e.code() == 401) handleSessionFailure("Unauthorized", true)
             }
         }
@@ -259,15 +322,26 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun updateDayDots() {
-        val dayViews = mapOf(
-            "Monday" to binding.layoutSchedule.btnDayMon,
-            "Tuesday" to binding.layoutSchedule.btnDayTue,
-            "Wednesday" to binding.layoutSchedule.btnDayWed,
-            "Thursday" to binding.layoutSchedule.btnDayThurs,
-            "Friday" to binding.layoutSchedule.btnDayFri,
-            "Saturday" to binding.layoutSchedule.btnDaySat
-        )
+    private fun updateDayDots(isAdmin: Boolean) {
+        val dayViews = if (isAdmin) {
+            mapOf(
+                "Monday" to binding.layoutSchedule.btnDayMon,
+                "Tuesday" to binding.layoutSchedule.btnDayTue,
+                "Wednesday" to binding.layoutSchedule.btnDayWed,
+                "Thursday" to binding.layoutSchedule.btnDayThurs,
+                "Friday" to binding.layoutSchedule.btnDayFri,
+                "Saturday" to binding.layoutSchedule.btnDaySat
+            )
+        } else {
+            mapOf(
+                "Monday" to binding.layoutStaffSchedule.btnStaffDayMon,
+                "Tuesday" to binding.layoutStaffSchedule.btnStaffDayTue,
+                "Wednesday" to binding.layoutStaffSchedule.btnStaffDayWed,
+                "Thursday" to binding.layoutStaffSchedule.btnStaffDayThurs,
+                "Friday" to binding.layoutStaffSchedule.btnStaffDayFri,
+                "Saturday" to binding.layoutStaffSchedule.btnStaffDaySat
+            )
+        }
 
         dayViews.forEach { (dayName, view) ->
             val dotContainer = view.getChildAt(1) as? LinearLayout
@@ -289,20 +363,23 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun displayScheduleForDay(dayName: String) {
-        val gridContainer = binding.layoutSchedule.llTimetableGrid
-        val cardsContainer = binding.layoutSchedule.flTimetableCards
+    private fun displayScheduleForDay(dayName: String, isAdmin: Boolean) {
+        val gridContainer = if (isAdmin) binding.layoutSchedule.llTimetableGrid else binding.layoutStaffSchedule.llStaffTimetableGrid
+        val cardsContainer = if (isAdmin) binding.layoutSchedule.flTimetableCards else binding.layoutStaffSchedule.flStaffTimetableCards
+        val noScheduleState = if (isAdmin) binding.layoutSchedule.llNoScheduleState else binding.layoutStaffSchedule.llStaffNoScheduleState
+        val timetableContainer = if (isAdmin) binding.layoutSchedule.rlTimetableContainer else binding.layoutStaffSchedule.rlStaffTimetableContainer
+
         gridContainer.removeAllViews()
         cardsContainer.removeAllViews()
 
         val daySchedules = mySchedules.filter { getDayStringFromInt(it.day).equals(dayName, ignoreCase = true) }
 
         if (daySchedules.isEmpty()) {
-            binding.layoutSchedule.llNoScheduleState.visibility = View.VISIBLE
-            binding.layoutSchedule.rlTimetableContainer.visibility = View.GONE
+            noScheduleState.visibility = View.VISIBLE
+            timetableContainer.visibility = View.GONE
         } else {
-            binding.layoutSchedule.llNoScheduleState.visibility = View.GONE
-            binding.layoutSchedule.rlTimetableContainer.visibility = View.VISIBLE
+            noScheduleState.visibility = View.GONE
+            timetableContainer.visibility = View.VISIBLE
             
             // Build the grid from 7:30 AM to 9:30 PM (21:30)
             var currentMinutes = 450 // 7:30 AM
@@ -501,19 +578,21 @@ class MainActivity : AppCompatActivity() {
         lifecycleScope.launch {
             try {
                 // Determine which API to call based on type
-                val facultySchedules = when(type) {
+                val scheduleResponse = when(type) {
                     "faculty" -> RetrofitClient.apiService.getFacultySchedule(resourceId)
                     "section" -> RetrofitClient.apiService.getSectionSchedule(resourceId)
                     "room" -> RetrofitClient.apiService.getRoomSchedule(resourceId)
-                    else -> emptyList()
+                    else -> ScheduleListResponse(emptyList())
                 }
+                
+                val schedules = scheduleResponse.schedules ?: emptyList()
 
                 days.forEachIndexed { index, dayName ->
                     val dayView = LayoutInflater.from(this@MainActivity).inflate(R.layout.item_day_schedule_card, daysContainer, false)
                     dayView.findViewById<TextView>(R.id.tv_day_name).text = dayName
                     
                     val dotsContainer = dayView.findViewById<LinearLayout>(R.id.ll_dots_container)
-                    val daySchedules = facultySchedules.filter { getDayStringFromInt(it.day).equals(fullDays[index], ignoreCase = true) }
+                    val daySchedules = schedules.filter { getDayStringFromInt(it.day).equals(fullDays[index], ignoreCase = true) }
                     
                     daySchedules.forEach { schedule ->
                         val dot = View(this@MainActivity).apply {
@@ -757,6 +836,9 @@ class MainActivity : AppCompatActivity() {
                 }
                 
                 currentUserFaculty = finalData
+                
+                // Update UI Based on Role
+                updateDashboardUIForRole()
 
                 val greeting = if (finalData.first_name.isNotEmpty()) {
                     "Hello, ${finalData.first_name}!"
@@ -765,18 +847,26 @@ class MainActivity : AppCompatActivity() {
                 }
                 binding.tvGreeting.text = greeting
                 
-                // Update profile UI with data
+                // Update profile UI with data (Admin)
                 binding.layoutProfile.tvProfileName.text = "${finalData.first_name} ${finalData.last_name}"
                 binding.layoutProfile.tvProfileEmailSub.text = finalData.email
                 binding.layoutProfile.etFirstName.setText(finalData.first_name)
                 binding.layoutProfile.etLastName.setText(finalData.last_name)
                 binding.layoutProfile.etEmail.setText(finalData.email)
                 
-                // Set initial selection for gender spinner
+                // Update profile UI with data (Staff)
+                binding.layoutStaffProfile.tvStaffProfileName.text = "${finalData.first_name} ${finalData.last_name}"
+                binding.layoutStaffProfile.tvStaffProfileEmailSub.text = finalData.email
+                binding.layoutStaffProfile.etStaffFirstName.setText(finalData.first_name)
+                binding.layoutStaffProfile.etStaffLastName.setText(finalData.last_name)
+                binding.layoutStaffProfile.etStaffEmail.setText(finalData.email)
+                
+                // Gender Spinners
                 val genderIndex = if (finalData.gender?.equals("F", ignoreCase = true) == true || finalData.gender?.equals("Female", ignoreCase = true) == true) 1 else 0
                 binding.layoutProfile.spinnerGender.setSelection(genderIndex)
+                binding.layoutStaffProfile.spinnerStaffGender.setSelection(genderIndex)
 
-                // Set initial selection for employment status spinner
+                // Employment Status Spinners
                 val employmentOptions = listOf("Full-Time", "Part-Time", "Contractual")
                 val empValue = when(finalData.employment_status?.lowercase()) {
                     "full_time" -> "Full-Time"
@@ -786,24 +876,29 @@ class MainActivity : AppCompatActivity() {
                 }
                 val empIndex = employmentOptions.indexOfFirst { it.equals(empValue, ignoreCase = true) }.let { if (it == -1) 0 else it }
                 binding.layoutProfile.spinnerEmploymentStatus.setSelection(empIndex)
+                binding.layoutStaffProfile.spinnerStaffEmploymentStatus.setSelection(empIndex)
                 
-                // Set initial selection for degree spinner
+                // Degree Spinners
                 val degIndex = when {
                     finalData.highest_degree?.contains("Master", ignoreCase = true) == true -> 0
                     finalData.highest_degree?.contains("Doctor", ignoreCase = true) == true -> 1
                     else -> 0
                 }
                 binding.layoutProfile.spinnerDegree.setSelection(degIndex)
+                binding.layoutStaffProfile.spinnerStaffDegree.setSelection(degIndex)
                 
                 // PRC License check mapping
                 val isQualified = finalData.prc_licensed?.trim()?.equals("Yes", ignoreCase = true) == true
                 binding.layoutProfile.cbQualified.isChecked = isQualified
                 binding.layoutProfile.cbNa.isChecked = !isQualified
+                binding.layoutStaffProfile.cbStaffQualified.isChecked = isQualified
+                binding.layoutStaffProfile.cbStaffNa.isChecked = !isQualified
 
                 // Specialization multi-select logic
                 updateSpecializationCheckboxes()
 
-                loadMySchedule()
+                val email = currentUserFaculty?.email?.lowercase()?.trim() ?: ""
+                loadMySchedule(isAdmin = email != "mpmariano@tip.edu.ph")
             } catch (e: HttpException) {
                 if (e.code() == 401) {
                     handleSessionFailure("Session expired. Please login again.", true)
@@ -812,6 +907,62 @@ class MainActivity : AppCompatActivity() {
                 }
             } catch (e: Exception) {
                 handleSessionFailure("Data Error: ${e.message}")
+            }
+        }
+    }
+
+    private fun updateDashboardUIForRole() {
+        val email = currentUserFaculty?.email?.lowercase()?.trim() ?: ""
+        val isStaff = email == "mpmariano@tip.edu.ph"
+        
+        if (isStaff) {
+            binding.llStaffDashboardContent.root.visibility = View.VISIBLE
+            binding.staffNavInclude.root.visibility = View.VISIBLE
+            binding.llAdminDashboardContent.visibility = View.GONE
+            binding.bottomNavContainer.visibility = View.GONE
+            binding.navCourse.visibility = View.GONE
+            
+            val staffGreeting = findViewById<TextView>(R.id.tv_staff_greeting)
+            staffGreeting?.text = "Hello, ${currentUserFaculty?.first_name} ${currentUserFaculty?.last_name}!"
+            
+            findViewById<Button>(R.id.btn_view_my_schedule_promo)?.setOnClickListener {
+                updateNavUI("schedule")
+            }
+            
+            startStaffCarousel()
+        } else {
+            binding.llStaffDashboardContent.root.visibility = View.GONE
+            binding.staffNavInclude.root.visibility = View.GONE
+            binding.llAdminDashboardContent.visibility = View.VISIBLE
+            binding.bottomNavContainer.visibility = View.VISIBLE
+            binding.navCourse.visibility = View.VISIBLE
+            
+            stopStaffCarousel()
+        }
+    }
+
+    private fun startStaffCarousel() {
+        carouselHandler.removeCallbacks(carouselRunnable)
+        carouselHandler.postDelayed(carouselRunnable, 5000)
+        updateStaffCarouselUI()
+    }
+
+    private fun stopStaffCarousel() {
+        carouselHandler.removeCallbacks(carouselRunnable)
+    }
+
+    private fun updateStaffCarouselUI() {
+        val feature = carouselFeatures[currentCarouselIndex]
+        findViewById<TextView>(R.id.tv_staff_feature_title)?.text = feature.first
+        findViewById<TextView>(R.id.tv_staff_feature_desc)?.text = feature.second
+        findViewById<ImageView>(R.id.iv_staff_feature_logo)?.setImageResource(feature.third)
+        
+        val indicators = findViewById<LinearLayout>(R.id.ll_carousel_indicators)
+        indicators?.let {
+            for (i in 0 until it.childCount) {
+                it.getChildAt(i).backgroundTintList = if (i == currentCarouselIndex) 
+                    android.content.res.ColorStateList.valueOf(Color.parseColor("#1E2124"))
+                    else android.content.res.ColorStateList.valueOf(Color.parseColor("#D1D5DB"))
             }
         }
     }
@@ -856,15 +1007,20 @@ class MainActivity : AppCompatActivity() {
         
         val adapter = ArrayAdapter(this, R.layout.item_spinner_selected, android.R.id.text1, listOf(displayText))
         adapter.setDropDownViewResource(R.layout.item_spinner_dropdown)
-        binding.layoutProfile.spinnerSpecialization.adapter = adapter
         
-        // Use setOnTouchListener to open the multi-select dialog instead of the standard spinner dropdown
-        binding.layoutProfile.spinnerSpecialization.setOnTouchListener { _, event ->
-            if (event.action == android.view.MotionEvent.ACTION_UP && binding.layoutProfile.spinnerSpecialization.isEnabled) {
+        // Update both spinners
+        binding.layoutProfile.spinnerSpecialization.adapter = adapter
+        binding.layoutStaffProfile.spinnerStaffSpecialization.adapter = adapter
+        
+        val touchListener = View.OnTouchListener { _, event ->
+            if (event.action == android.view.MotionEvent.ACTION_UP) {
                 showCustomMultiSelectDialog()
             }
-            true // Always consume to prevent default dropdown
+            true
         }
+        
+        binding.layoutProfile.spinnerSpecialization.setOnTouchListener(touchListener)
+        binding.layoutStaffProfile.spinnerStaffSpecialization.setOnTouchListener(touchListener)
     }
 
     private fun showCustomMultiSelectDialog() {
@@ -1377,14 +1533,26 @@ class MainActivity : AppCompatActivity() {
     private fun updateNavUI(nav: String) {
         if (currentNav == nav) return
         currentNav = nav
+        
+        val email = currentUserFaculty?.email?.lowercase()?.trim() ?: ""
+        val isStaff = email == "mpmariano@tip.edu.ph"
 
-        // Reset all backgrounds, visibility and weights
+        // Reset all
         resetNavItem(binding.navHome, binding.tvHome, binding.ivHome)
         resetNavItem(binding.navCourse, binding.tvCourse, binding.ivCourse)
         resetNavItem(binding.navSchedule, binding.tvSchedule, binding.ivSchedule)
         resetNavItem(binding.navProfile, binding.tvProfile, binding.ivProfile)
+        
+        val staffHome = findViewById<LinearLayout>(R.id.nav_staff_home)
+        val staffSchedule = findViewById<LinearLayout>(R.id.nav_staff_schedule)
+        val staffProfile = findViewById<LinearLayout>(R.id.nav_staff_profile)
+        
+        if (staffHome != null) {
+            resetStaffNavItem(staffHome, findViewById(R.id.tv_staff_home), findViewById(R.id.iv_staff_home))
+            resetStaffNavItem(staffSchedule, findViewById(R.id.tv_staff_schedule), findViewById(R.id.iv_staff_schedule))
+            resetStaffNavItem(staffProfile, findViewById(R.id.tv_staff_profile), findViewById(R.id.iv_staff_profile))
+        }
 
-        // Set active state
         val activeBg = ResourcesCompat.getDrawable(resources, R.drawable.bg_active_nav, theme)
         val activeColor = Color.parseColor("#1E2124")
 
@@ -1392,11 +1560,17 @@ class MainActivity : AppCompatActivity() {
 
         when (nav) {
             "home" -> {
-                setActiveNavItem(binding.navHome, binding.tvHome, binding.ivHome, activeBg, activeColor)
+                if (isStaff) {
+                    staffHome?.let { setActiveStaffNavItem(it, findViewById(R.id.tv_staff_home), findViewById(R.id.iv_staff_home), activeBg, activeColor) }
+                } else {
+                    setActiveNavItem(binding.navHome, binding.tvHome, binding.ivHome, activeBg, activeColor)
+                }
                 binding.layoutHome.visibility = View.VISIBLE
                 binding.layoutCourse.root.visibility = View.GONE
                 binding.layoutSchedule.root.visibility = View.GONE
                 binding.layoutProfile.root.visibility = View.GONE
+                binding.layoutStaffSchedule.root.visibility = View.GONE
+                binding.layoutStaffProfile.root.visibility = View.GONE
             }
             "course" -> {
                 setActiveNavItem(binding.navCourse, binding.tvCourse, binding.ivCourse, activeBg, activeColor)
@@ -1404,21 +1578,40 @@ class MainActivity : AppCompatActivity() {
                 binding.layoutCourse.root.visibility = View.VISIBLE
                 binding.layoutSchedule.root.visibility = View.GONE
                 binding.layoutProfile.root.visibility = View.GONE
+                binding.layoutStaffSchedule.root.visibility = View.GONE
+                binding.layoutStaffProfile.root.visibility = View.GONE
                 loadCourses()
             }
             "schedule" -> {
-                setActiveNavItem(binding.navSchedule, binding.tvSchedule, binding.ivSchedule, activeBg, activeColor)
+                if (isStaff) {
+                    staffSchedule?.let { setActiveStaffNavItem(it, findViewById(R.id.tv_staff_schedule), findViewById(R.id.iv_staff_schedule), activeBg, activeColor) }
+                    binding.layoutStaffSchedule.root.visibility = View.VISIBLE
+                    binding.layoutSchedule.root.visibility = View.GONE
+                } else {
+                    setActiveNavItem(binding.navSchedule, binding.tvSchedule, binding.ivSchedule, activeBg, activeColor)
+                    binding.layoutSchedule.root.visibility = View.VISIBLE
+                    binding.layoutStaffSchedule.root.visibility = View.GONE
+                }
                 binding.layoutHome.visibility = View.GONE
                 binding.layoutCourse.root.visibility = View.GONE
-                binding.layoutSchedule.root.visibility = View.VISIBLE
                 binding.layoutProfile.root.visibility = View.GONE
+                binding.layoutStaffProfile.root.visibility = View.GONE
+                loadMySchedule(isAdmin = !isStaff)
             }
             "profile" -> {
-                setActiveNavItem(binding.navProfile, binding.tvProfile, binding.ivProfile, activeBg, activeColor)
+                if (isStaff) {
+                    staffProfile?.let { setActiveStaffNavItem(it, findViewById(R.id.tv_staff_profile), findViewById(R.id.iv_staff_profile), activeBg, activeColor) }
+                    binding.layoutStaffProfile.root.visibility = View.VISIBLE
+                    binding.layoutProfile.root.visibility = View.GONE
+                } else {
+                    setActiveNavItem(binding.navProfile, binding.tvProfile, binding.ivProfile, activeBg, activeColor)
+                    binding.layoutProfile.root.visibility = View.VISIBLE
+                    binding.layoutStaffProfile.root.visibility = View.GONE
+                }
                 binding.layoutHome.visibility = View.GONE
                 binding.layoutCourse.root.visibility = View.GONE
                 binding.layoutSchedule.root.visibility = View.GONE
-                binding.layoutProfile.root.visibility = View.VISIBLE
+                binding.layoutStaffSchedule.root.visibility = View.GONE
             }
         }
     }
@@ -1438,6 +1631,24 @@ class MainActivity : AppCompatActivity() {
         imageView.setColorFilter(activeColor)
         val params = layout.layoutParams as LinearLayout.LayoutParams
         params.weight = 55f
+        layout.layoutParams = params
+    }
+    
+    private fun resetStaffNavItem(layout: LinearLayout, textView: TextView, imageView: ImageView) {
+        layout.background = null
+        textView.visibility = View.GONE
+        imageView.setColorFilter(Color.WHITE)
+        val params = layout.layoutParams as LinearLayout.LayoutParams
+        params.weight = 20f
+        layout.layoutParams = params
+    }
+
+    private fun setActiveStaffNavItem(layout: LinearLayout, textView: TextView, imageView: ImageView, activeBg: android.graphics.drawable.Drawable?, activeColor: Int) {
+        layout.background = activeBg
+        textView.visibility = View.VISIBLE
+        imageView.setColorFilter(activeColor)
+        val params = layout.layoutParams as LinearLayout.LayoutParams
+        params.weight = 60f
         layout.layoutParams = params
     }
 
@@ -1467,32 +1678,23 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupPrinting() {
-        binding.layoutSchedule.btnPrint.setOnClickListener {
-            printSchedule()
-        }
-        binding.layoutSchedule.btnDownloadPdf.setOnClickListener {
-            printSchedule() // In Android, Save as PDF is part of the standard print flow
-        }
+        binding.layoutSchedule.btnPrint.setOnClickListener { printSchedule() }
+        binding.layoutSchedule.btnDownloadPdf.setOnClickListener { printSchedule() }
+        
+        binding.layoutStaffSchedule.btnStaffPrint.setOnClickListener { printSchedule() }
+        binding.layoutStaffSchedule.btnStaffDownloadPdf.setOnClickListener { printSchedule() }
     }
 
     private fun printSchedule() {
         lifecycleScope.launch {
             try {
-                // Determine which HTML to fetch based on active schedule tab or current user
-                // Defaulting to staff (my schedule) version
                 val responseBody = RetrofitClient.apiService.getStaffScheduleHtml()
                 val htmlContent = responseBody.string()
-                
-                runOnUiThread {
-                    doPrint(htmlContent)
-                }
+                runOnUiThread { doPrint(htmlContent) }
             } catch (e: Exception) {
                 Log.e("MainActivity", "Print failed", e)
-                if (e is HttpException && e.code() == 401) {
-                    handleSessionFailure("Unauthorized", true)
-                } else {
-                    Toast.makeText(this@MainActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
-                }
+                if (e is HttpException && e.code() == 401) handleSessionFailure("Unauthorized", true)
+                else Toast.makeText(this@MainActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -1504,7 +1706,6 @@ class MainActivity : AppCompatActivity() {
                 createWebPrintJob(view)
             }
         }
-        // Use a base URL if you have local assets like images/CSS, otherwise null is fine
         webView.loadDataWithBaseURL(null, htmlContent, "text/html", "UTF-8", null)
     }
 
@@ -1512,18 +1713,12 @@ class MainActivity : AppCompatActivity() {
         val printManager = getSystemService(Context.PRINT_SERVICE) as PrintManager
         val jobName = "Schedule Print Job"
         val printAdapter = webView.createPrintDocumentAdapter(jobName)
-        
-        printManager.print(
-            jobName,
-            printAdapter,
-            PrintAttributes.Builder().build()
-        )
+        printManager.print(jobName, printAdapter, PrintAttributes.Builder().build())
     }
 
     private fun handleSessionFailure(message: String, isAuthError: Boolean = false) {
         if (isAuthFailureHandled) return
         if (isAuthError) isAuthFailureHandled = true
-
         runOnUiThread {
             val displayMessage = if (isAuthError) "Session expired. Please login again." else message
             Toast.makeText(this, displayMessage, Toast.LENGTH_LONG).show()
@@ -1540,207 +1735,136 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupProfileLogic() {
-        val layout = binding.layoutProfile
+        // Shared Setup Logic
+        setupProfileSpinners(binding.layoutProfile.spinnerGender, binding.layoutProfile.spinnerEmploymentStatus, binding.layoutProfile.spinnerDegree)
+        setupProfileSpinners(binding.layoutStaffProfile.spinnerStaffGender, binding.layoutStaffProfile.spinnerStaffEmploymentStatus, binding.layoutStaffProfile.spinnerStaffDegree)
+
+        // Admin Listeners
+        binding.layoutProfile.btnEditProfile.setOnClickListener { toggleProfileEdit(true, isAdmin = true) }
+        binding.layoutProfile.btnCancelEdit.setOnClickListener { 
+            toggleProfileEdit(false, isAdmin = true)
+            currentUserFaculty?.let { restoreProfileData(it, isAdmin = true) }
+        }
+        binding.layoutProfile.btnSaveProfile.setOnClickListener { saveProfileChanges(isAdmin = true) }
+        binding.layoutProfile.btnLogout.setOnClickListener { logout() }
+
+        // Staff Listeners
+        binding.layoutStaffProfile.btnStaffEditProfile.setOnClickListener { toggleProfileEdit(true, isAdmin = false) }
+        binding.layoutStaffProfile.btnStaffCancelEdit.setOnClickListener { 
+            toggleProfileEdit(false, isAdmin = false)
+            currentUserFaculty?.let { restoreProfileData(it, isAdmin = false) }
+        }
+        binding.layoutStaffProfile.btnStaffSaveProfile.setOnClickListener { saveProfileChanges(isAdmin = false) }
+        binding.layoutStaffProfile.btnStaffLogout.setOnClickListener { logout() }
+
+        // Mutual Exclusivity
+        binding.layoutProfile.cbQualified.setOnCheckedChangeListener { _, isChecked -> if (isChecked) binding.layoutProfile.cbNa.isChecked = false }
+        binding.layoutProfile.cbNa.setOnCheckedChangeListener { _, isChecked -> if (isChecked) binding.layoutProfile.cbQualified.isChecked = false }
         
-        // Setup Gender Spinner with custom design
-        val genderOptions = listOf("Male", "Female")
-        val genderAdapter = ArrayAdapter(this, R.layout.item_spinner_selected, android.R.id.text1, genderOptions)
-        genderAdapter.setDropDownViewResource(R.layout.item_spinner_dropdown)
-        layout.spinnerGender.adapter = genderAdapter
-        
-        // Setup Employment Status Spinner with custom design
-        val employmentOptions = listOf("Full-Time", "Part-Time", "Contractual")
-        val empAdapter = ArrayAdapter(this, R.layout.item_spinner_selected, android.R.id.text1, employmentOptions)
-        empAdapter.setDropDownViewResource(R.layout.item_spinner_dropdown)
-        layout.spinnerEmploymentStatus.adapter = empAdapter
+        binding.layoutStaffProfile.cbStaffQualified.setOnCheckedChangeListener { _, isChecked -> if (isChecked) binding.layoutStaffProfile.cbStaffNa.isChecked = false }
+        binding.layoutStaffProfile.cbStaffNa.setOnCheckedChangeListener { _, isChecked -> if (isChecked) binding.layoutStaffProfile.cbStaffQualified.isChecked = false }
 
-        // Setup Highest Degree Spinner with custom design
-        val degreeOptions = listOf("Master's Degree", "Doctoral's Degree")
-        val degAdapter = ArrayAdapter(this, R.layout.item_spinner_selected, android.R.id.text1, degreeOptions)
-        degAdapter.setDropDownViewResource(R.layout.item_spinner_dropdown)
-        layout.spinnerDegree.adapter = degAdapter
+        // Visibility Toggles
+        setupPasswordToggle(binding.layoutProfile.ivShowPassword, binding.layoutProfile.etPassword)
+        setupPasswordToggle(binding.layoutStaffProfile.ivStaffShowPassword, binding.layoutStaffProfile.etStaffPassword)
 
-        layout.btnEditProfile.setOnClickListener {
-            toggleProfileEdit(true)
-        }
-        
-        layout.ivProfileBg.setOnClickListener {
-            toggleProfileEdit(true)
-        }
-        
-        layout.cvProfilePic.setOnClickListener {
-            toggleProfileEdit(true)
-        }
+        toggleProfileEdit(false, isAdmin = true)
+        toggleProfileEdit(false, isAdmin = false)
+    }
 
-        // Handle PRC License Checkbox mutual exclusivity
-        layout.cbQualified.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) layout.cbNa.isChecked = false
-            else if (!layout.cbNa.isChecked) layout.cbNa.isChecked = true
-        }
+    private fun setupProfileSpinners(gender: Spinner, emp: Spinner, deg: Spinner) {
+        gender.adapter = ArrayAdapter(this, R.layout.item_spinner_selected, android.R.id.text1, listOf("Male", "Female")).apply { setDropDownViewResource(R.layout.item_spinner_dropdown) }
+        emp.adapter = ArrayAdapter(this, R.layout.item_spinner_selected, android.R.id.text1, listOf("Full-Time", "Part-Time", "Contractual")).apply { setDropDownViewResource(R.layout.item_spinner_dropdown) }
+        deg.adapter = ArrayAdapter(this, R.layout.item_spinner_selected, android.R.id.text1, listOf("Master's Degree", "Doctoral's Degree")).apply { setDropDownViewResource(R.layout.item_spinner_dropdown) }
+    }
 
-        layout.cbNa.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) layout.cbQualified.isChecked = false
-            else if (!layout.cbQualified.isChecked) layout.cbQualified.isChecked = true
-        }
-        
-        layout.btnCancelEdit.setOnClickListener {
-            toggleProfileEdit(false)
-            // Restore original values
-            currentUserFaculty?.let { data ->
-                layout.etFirstName.setText(data.first_name)
-                layout.etLastName.setText(data.last_name)
-                layout.etEmail.setText(data.email)
-                
-                val genderIndex = if (data.gender?.equals("F", ignoreCase = true) == true || data.gender?.equals("Female", ignoreCase = true) == true) 1 else 0
-                layout.spinnerGender.setSelection(genderIndex)
-                
-                val empValue = when(data.employment_status?.lowercase()) {
-                    "full_time" -> "Full-Time"
-                    "part_time" -> "Part-Time"
-                    "contractual" -> "Contractual"
-                    else -> data.employment_status ?: ""
-                }
-                val empIndex = employmentOptions.indexOfFirst { it.equals(empValue, ignoreCase = true) }.let { if (it == -1) 0 else it }
-                layout.spinnerEmploymentStatus.setSelection(empIndex)
-
-                val degIndex = when {
-                    data.highest_degree?.contains("Master", ignoreCase = true) == true -> 0
-                    data.highest_degree?.contains("Doctor", ignoreCase = true) == true -> 1
-                    else -> 0
-                }
-                layout.spinnerDegree.setSelection(degIndex)
-
-                // Restore PRC License
-                val isQualified = data.prc_licensed?.trim()?.equals("Yes", ignoreCase = true) == true
-                layout.cbQualified.isChecked = isQualified
-                layout.cbNa.isChecked = !isQualified
-
-                // Restore Specialization
-                updateSpecializationCheckboxes()
-            }
-        }
-        
-        layout.btnSaveProfile.setOnClickListener {
-            saveProfileChanges()
-        }
-        
-        // Initialize in read-only mode
-        toggleProfileEdit(false)
-
-        layout.btnLogout.setOnClickListener {
-            RetrofitClient.logout()
-            redirectToLogin()
-        }
-
-        // Password visibility toggle logic
-        var isPasswordVisible = false
-        layout.ivShowPassword.setOnClickListener {
-            isPasswordVisible = !isPasswordVisible
-            if (isPasswordVisible) {
-                // Show password
-                layout.etPassword.transformationMethod = HideReturnsTransformationMethod.getInstance()
-                // Update icon if you have a "hide" version, otherwise keep current
-                layout.ivShowPassword.setColorFilter(Color.parseColor("#1E2124"))
-            } else {
-                // Hide password
-                layout.etPassword.transformationMethod = PasswordTransformationMethod.getInstance()
-                layout.ivShowPassword.setColorFilter(Color.parseColor("#888888"))
-            }
-            // Maintain cursor at the end
-            layout.etPassword.setSelection(layout.etPassword.text.length)
+    private fun setupPasswordToggle(icon: ImageView, editText: EditText) {
+        var isVisible = false
+        icon.setOnClickListener {
+            isVisible = !isVisible
+            editText.transformationMethod = if (isVisible) HideReturnsTransformationMethod.getInstance() else PasswordTransformationMethod.getInstance()
+            icon.setColorFilter(if (isVisible) Color.parseColor("#1E2124") else Color.parseColor("#888888"))
+            editText.setSelection(editText.text.length)
         }
     }
 
-    private fun toggleProfileEdit(enabled: Boolean) {
-        val layout = binding.layoutProfile
-        
-        layout.etFirstName.isEnabled = enabled
-        layout.etLastName.isEnabled = enabled
-        
-        // Email logic: ALWAYS read-only
-        layout.etEmail.isEnabled = false
-        layout.etEmail.setTextColor(Color.parseColor("#888888"))
-        layout.tvEmailLabel.text = "Email (Read-only)"
-        
-        layout.spinnerGender.isEnabled = enabled
-        layout.etPassword.isEnabled = enabled
-        layout.spinnerEmploymentStatus.isEnabled = enabled
-        layout.spinnerDegree.isEnabled = enabled
-        layout.spinnerSpecialization.isEnabled = enabled
-        
-        layout.cbQualified.isEnabled = enabled
-        layout.cbNa.isEnabled = enabled
-        
-        layout.llEditActions.visibility = if (enabled) View.VISIBLE else View.GONE
-        layout.btnEditProfile.visibility = if (enabled) View.GONE else View.VISIBLE
+    private fun toggleProfileEdit(enabled: Boolean, isAdmin: Boolean) {
+        if (isAdmin) {
+            val l = binding.layoutProfile
+            l.etFirstName.isEnabled = enabled
+            l.etLastName.isEnabled = enabled
+            l.spinnerGender.isEnabled = enabled
+            l.etPassword.isEnabled = enabled
+            l.spinnerEmploymentStatus.isEnabled = enabled
+            l.spinnerDegree.isEnabled = enabled
+            l.spinnerSpecialization.isEnabled = enabled
+            l.cbQualified.isEnabled = enabled
+            l.cbNa.isEnabled = enabled
+            l.llEditActions.visibility = if (enabled) View.VISIBLE else View.GONE
+            l.btnEditProfile.visibility = if (enabled) View.GONE else View.VISIBLE
+        } else {
+            val l = binding.layoutStaffProfile
+            l.etStaffFirstName.isEnabled = enabled
+            l.etStaffLastName.isEnabled = enabled
+            l.spinnerStaffGender.isEnabled = enabled
+            l.etStaffPassword.isEnabled = enabled
+            l.spinnerStaffEmploymentStatus.isEnabled = enabled
+            l.spinnerStaffDegree.isEnabled = enabled
+            l.spinnerStaffSpecialization.isEnabled = enabled
+            l.cbStaffQualified.isEnabled = enabled
+            l.cbStaffNa.isEnabled = enabled
+            l.llStaffEditActions.visibility = if (enabled) View.VISIBLE else View.GONE
+            l.btnStaffEditProfile.visibility = if (enabled) View.GONE else View.VISIBLE
+        }
     }
 
-    private fun saveProfileChanges() {
-        val layout = binding.layoutProfile
-        val newFirstName = layout.etFirstName.text.toString().trim()
-        val newLastName = layout.etLastName.text.toString().trim()
-        val newEmail = layout.etEmail.text.toString().trim()
-        
-        // Convert display values back to backend-expected formats
-        val displayGender = layout.spinnerGender.selectedItem.toString()
-        val backendGender = if (displayGender == "Male") "M" else "F"
-        
-        val displayEmpStatus = layout.spinnerEmploymentStatus.selectedItem.toString()
-        val backendEmpStatus = when(displayEmpStatus) {
-            "Full-Time" -> "full_time"
-            "Part-Time" -> "part_time"
-            "Contractual" -> "contractual"
-            else -> displayEmpStatus.lowercase().replace("-", "_")
+    private fun restoreProfileData(data: FacultyData, isAdmin: Boolean) {
+        if (isAdmin) {
+            binding.layoutProfile.etFirstName.setText(data.first_name)
+            binding.layoutProfile.etLastName.setText(data.last_name)
+        } else {
+            binding.layoutStaffProfile.etStaffFirstName.setText(data.first_name)
+            binding.layoutStaffProfile.etStaffLastName.setText(data.last_name)
         }
+        updateSpecializationCheckboxes()
+    }
+
+    private fun logout() {
+        RetrofitClient.logout()
+        redirectToLogin()
+    }
+
+    private fun saveProfileChanges(isAdmin: Boolean) {
+        val l = if (isAdmin) binding.layoutProfile else null
+        val ls = if (!isAdmin) binding.layoutStaffProfile else null
         
-        val displayDegree = layout.spinnerDegree.selectedItem.toString()
-        val backendDegree = when(displayDegree) {
-            "Master's Degree" -> "Masters"
-            "Doctoral's Degree" -> "Doctorate"
-            else -> displayDegree
-        }
-
-        // PRC Licensed boolean conversion
-        val isPrcLicensed = layout.cbQualified.isChecked
-
+        val newFirstName = l?.etFirstName?.text?.toString() ?: ls?.etStaffFirstName?.text?.toString() ?: ""
+        val newLastName = l?.etLastName?.text?.toString() ?: ls?.etStaffLastName?.text?.toString() ?: ""
+        
         Toast.makeText(this, "Updating profile...", Toast.LENGTH_SHORT).show()
 
         lifecycleScope.launch {
             try {
-                // Send IDs to backend for Many-to-Many updates
-                val updateData = mutableMapOf(
+                val updateData = mutableMapOf<String, Any>(
                     "first_name" to newFirstName,
                     "last_name" to newLastName,
-                    "email" to newEmail,
-                    "gender" to backendGender,
-                    "employment_status" to backendEmpStatus,
-                    "highest_degree" to backendDegree,
-                    "prc_licensed" to isPrcLicensed,
                     "specialization" to selectedSpecIds.toList()
                 )
-                
                 val updatedFaculty = RetrofitClient.apiService.updateProfile(updateData)
                 currentUserFaculty = updatedFaculty
-                
-                Toast.makeText(this@MainActivity, "Profile updated successfully!", Toast.LENGTH_SHORT).show()
-                
-                layout.tvProfileName.text = "${updatedFaculty.first_name} ${updatedFaculty.last_name}"
-                binding.tvGreeting.text = "Hello, ${updatedFaculty.first_name}!"
-                
-                // Update local fields with returned data to be sure
-                layout.etEmail.setText(updatedFaculty.email)
-                
-                toggleProfileEdit(false)
-                // Refresh specialization state
-                updateSpecializationCheckboxes()
+                Toast.makeText(this@MainActivity, "Profile updated!", Toast.LENGTH_SHORT).show()
+                toggleProfileEdit(false, isAdmin)
+                updateUserDataUI(updatedFaculty)
             } catch (e: Exception) {
-                Log.e("MainActivity", "Failed to update profile", e)
-                if (e is HttpException && e.code() == 401) {
-                    handleSessionFailure("Unauthorized", true)
-                } else {
-                    Toast.makeText(this@MainActivity, "Update failed. Server sync issue.", Toast.LENGTH_SHORT).show()
-                }
+                Log.e("MainActivity", "Update failed", e)
+                Toast.makeText(this@MainActivity, "Update failed", Toast.LENGTH_SHORT).show()
             }
         }
+    }
+
+    private fun updateUserDataUI(data: FacultyData) {
+        binding.tvGreeting.text = "Hello, ${data.first_name}!"
+        binding.layoutProfile.tvProfileName.text = "${data.first_name} ${data.last_name}"
+        binding.layoutStaffProfile.tvStaffProfileName.text = "${data.first_name} ${data.last_name}"
     }
 }

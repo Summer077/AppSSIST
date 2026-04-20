@@ -33,7 +33,9 @@ data class FacultyData(
     @SerializedName("profile_picture_url")
     val profile_picture_url: String? = null,
     @SerializedName("total_units")
-    val total_units: Int = 0
+    val total_units: Int = 0,
+    @SerializedName("role")
+    val role: String? = "STAFF" // Default to STAFF
 )
 
 data class FacultyListItem(
@@ -46,7 +48,9 @@ data class FacultyListItem(
     @SerializedName("highest_degree")
     val highest_degree: String? = null,
     @SerializedName(value = "total_units", alternate = ["units"])
-    val total_units: Int = 0
+    val total_units: Int = 0,
+    @SerializedName("role")
+    val role: String? = null
 )
 
 data class CurriculumResponse(
@@ -101,7 +105,7 @@ data class RoomResponse(
 
 data class ScheduleListResponse(
     @SerializedName("schedules")
-    val results: List<ScheduleItemResponse>?
+    val schedules: List<ScheduleItemResponse>? = null
 )
 
 data class ScheduleItemResponse(

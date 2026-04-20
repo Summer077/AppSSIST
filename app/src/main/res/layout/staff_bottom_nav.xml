@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/staff_nav_container"
+    android:layout_width="match_parent"
+    android:layout_height="60dp"
+    android:background="@drawable/bg_bottom_nav"
+    android:orientation="horizontal"
+    android:gravity="center"
+    android:layout_marginHorizontal="24dp"
+    android:layout_marginBottom="12dp"
+    android:paddingHorizontal="10dp"
+    android:weightSum="100">
+
+    <!-- Nav Home -->
+    <LinearLayout
+        android:id="@+id/nav_staff_home"
+        android:layout_width="0dp"
+        android:layout_height="42dp"
+        android:layout_weight="33.3"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:background="@drawable/bg_active_nav"
+        android:paddingHorizontal="12dp"
+        android:clickable="true"
+        android:focusable="true">
+        <ImageView
+            android:id="@+id/iv_staff_home"
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:src="@drawable/dashboard"
+            app:tint="#1E2124" />
+        <TextView
+            android:id="@+id/tv_staff_home"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Home"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:textColor="#1E2124"
+            android:fontFamily="@font/lexend"
+            android:layout_marginStart="8dp"
+            android:maxLines="1"
+            android:ellipsize="end" />
+    </LinearLayout>
+
+    <!-- Nav Schedule -->
+    <LinearLayout
+        android:id="@+id/nav_staff_schedule"
+        android:layout_width="0dp"
+        android:layout_height="42dp"
+        android:layout_weight="33.3"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:paddingHorizontal="12dp"
+        android:clickable="true"
+        android:focusable="true">
+        <ImageView
+            android:id="@+id/iv_staff_schedule"
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:src="@drawable/schedule"
+            app:tint="#FFFFFF" />
+        <TextView
+            android:id="@+id/tv_staff_schedule"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Schedule"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:textColor="#1E2124"
+            android:fontFamily="@font/lexend"
+            android:layout_marginStart="8dp"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:visibility="gone" />
+    </LinearLayout>
+
+    <!-- Nav Profile -->
+    <LinearLayout
+        android:id="@+id/nav_staff_profile"
+        android:layout_width="0dp"
+        android:layout_height="42dp"
+        android:layout_weight="33.3"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:paddingHorizontal="12dp"
+        android:clickable="true"
+        android:focusable="true">
+        <ImageView
+            android:id="@+id/iv_staff_profile"
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:src="@drawable/profile"
+            app:tint="#FFFFFF" />
+        <TextView
+            android:id="@+id/tv_staff_profile"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Profile"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:textColor="#1E2124"
+            android:fontFamily="@font/lexend"
+            android:layout_marginStart="8dp"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:visibility="gone" />
+    </LinearLayout>
+
+</LinearLayout>

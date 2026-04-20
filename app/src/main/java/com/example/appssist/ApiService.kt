@@ -56,17 +56,17 @@ interface ApiService {
     @GET("api/faculty/{id}/schedule-data/")
     suspend fun getFacultySchedule(
         @Path("id") facultyId: Int
-    ): List<ScheduleItemResponse>
+    ): ScheduleListResponse
 
     @GET("api/section/{id}/schedule-data/")
     suspend fun getSectionSchedule(
         @Path("id") sectionId: Int
-    ): List<ScheduleItemResponse>
+    ): ScheduleListResponse
 
     @GET("api/room/{id}/schedule-data/")
     suspend fun getRoomSchedule(
         @Path("id") roomId: Int
-    ): List<ScheduleItemResponse>
+    ): ScheduleListResponse
 
     @GET("api/schedule/available-resources/")
     suspend fun getAvailableResources(): AvailableResourcesResponse
