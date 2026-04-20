@@ -49,16 +49,25 @@
     <FrameLayout
         android:id="@+id/staff_carousel_card"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@drawable/bg_neumorphic_raised"
-        android:padding="24dp"
-        android:layout_marginBottom="12dp">
+        android:layout_height="135dp"
+        android:background="@drawable/bg_neumorphic_button"
+        android:layout_marginBottom="12dp"
+        android:clipChildren="true"
+        android:clipToPadding="true">
+
+        <!-- Glass Overlay -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_margin="3dp"
+            android:background="@drawable/bg_glass_overlay" />
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:orientation="horizontal"
-            android:gravity="center_vertical">
+            android:gravity="center_vertical"
+            android:padding="20dp">
 
             <ImageView
                 android:id="@+id/iv_staff_feature_logo"
@@ -80,7 +89,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Automated Schedule Generation"
-                    android:textSize="12sp"
+                    android:textSize="13sp"
                     android:textStyle="bold"
                     android:textColor="@color/text_primary"
                     android:fontFamily="@font/lexend"
@@ -94,7 +103,7 @@
                     android:textSize="10sp"
                     android:textColor="#555555"
                     android:fontFamily="@font/lexend"
-                    android:lineHeight="16sp" />
+                    android:lineHeight="14sp" />
             </LinearLayout>
         </LinearLayout>
     </FrameLayout>

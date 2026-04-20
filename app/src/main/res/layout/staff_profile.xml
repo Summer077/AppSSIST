@@ -12,6 +12,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
+        <!-- Header Background Section -->
         <RelativeLayout
             android:id="@+id/rl_staff_profile_header"
             android:layout_width="match_parent"
@@ -30,13 +31,16 @@
             <View
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:background="#99000000" />
+                android:background="#99000000"
+                android:clickable="false" />
 
+            <!-- Profile Title & Edit Button -->
             <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:paddingHorizontal="20dp"
-                android:paddingTop="60dp">
+                android:paddingTop="60dp"
+                android:paddingBottom="20dp">
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -57,19 +61,24 @@
                     android:src="@drawable/edit_profile" />
             </RelativeLayout>
 
+            <!-- Profile Picture & Info -->
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_centerInParent="true"
                 android:gravity="center"
-                android:orientation="vertical">
+                android:orientation="vertical"
+                android:layout_marginTop="20dp">
 
                 <androidx.cardview.widget.CardView
                     android:id="@+id/cv_staff_profile_pic"
                     android:layout_width="140dp"
                     android:layout_height="140dp"
+                    android:elevation="0dp"
                     app:cardCornerRadius="70dp"
-                    app:cardElevation="0dp">
+                    app:cardElevation="0dp"
+                    android:clickable="true"
+                    android:focusable="true">
 
                     <ImageView
                         android:id="@+id/iv_staff_profile_pic"
@@ -101,6 +110,7 @@
             </LinearLayout>
         </RelativeLayout>
 
+        <!-- Form Card Section -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -110,71 +120,468 @@
             android:background="@drawable/bg_bottom_nav"
             android:backgroundTint="#E7EBF0"
             android:elevation="4dp"
-            android:paddingHorizontal="20dp"
             android:paddingTop="30dp"
-            android:paddingBottom="40dp">
+            android:paddingBottom="40dp"
+            android:minHeight="600dp">
 
-            <TextView
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:fontFamily="@font/lexend"
-                android:text="Personal Information"
-                android:textColor="#1E2124"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:layout_marginBottom="20dp"/>
+                android:orientation="vertical"
+                android:paddingHorizontal="20dp">
 
-            <!-- Form Fields -->
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="First Name" android:textColor="#888888" android:textSize="12sp" android:layout_marginBottom="8dp"/>
-            <EditText android:id="@+id/et_staff_first_name" android:layout_width="match_parent" android:layout_height="48dp" android:background="@drawable/bg_neumorphic_recessed" android:enabled="false" android:paddingHorizontal="16dp" android:textSize="14sp" android:layout_marginBottom="16dp"/>
+                <!-- Personal Information Header -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/lexend"
+                    android:text="Personal Information"
+                    android:textColor="#1E2124"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="20dp"/>
 
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Last Name" android:textColor="#888888" android:textSize="12sp" android:layout_marginBottom="8dp"/>
-            <EditText android:id="@+id/et_staff_last_name" android:layout_width="match_parent" android:layout_height="48dp" android:background="@drawable/bg_neumorphic_recessed" android:enabled="false" android:paddingHorizontal="16dp" android:textSize="14sp" android:layout_marginBottom="16dp"/>
+                <!-- First Name -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/lexend"
+                    android:text="First Name"
+                    android:textColor="#888888"
+                    android:textSize="12sp"
+                    android:layout_marginBottom="8dp"/>
 
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Email (Read-only)" android:textColor="#888888" android:textSize="12sp" android:layout_marginBottom="8dp"/>
-            <EditText android:id="@+id/et_staff_email" android:layout_width="match_parent" android:layout_height="48dp" android:background="@drawable/bg_neumorphic_recessed" android:enabled="false" android:paddingHorizontal="16dp" android:textColor="#888888" android:textSize="14sp" android:layout_marginBottom="16dp"/>
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:background="@drawable/bg_neumorphic_recessed"
+                    android:layout_marginBottom="16dp">
 
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Gender" android:textColor="#888888" android:textSize="12sp" android:layout_marginBottom="8dp"/>
-            <FrameLayout android:layout_width="match_parent" android:layout_height="48dp" android:background="@drawable/bg_neumorphic_recessed" android:layout_marginBottom="16dp">
-                <Spinner android:id="@+id/spinner_staff_gender" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@android:color/transparent" android:enabled="false"/>
-            </FrameLayout>
+                    <EditText
+                        android:id="@+id/et_staff_first_name"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@android:color/transparent"
+                        android:enabled="false"
+                        android:fontFamily="@font/lexend"
+                        android:paddingHorizontal="16dp"
+                        android:textColor="#212529"
+                        android:textSize="14sp" />
+                </RelativeLayout>
 
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Password" android:textColor="#888888" android:textSize="12sp" android:layout_marginBottom="8dp"/>
-            <RelativeLayout android:layout_width="match_parent" android:layout_height="48dp" android:background="@drawable/bg_neumorphic_recessed" android:layout_marginBottom="16dp">
-                <EditText android:id="@+id/et_staff_password" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@android:color/transparent" android:inputType="textPassword" android:paddingHorizontal="16dp" android:enabled="false"/>
-                <ImageView android:id="@+id/iv_staff_show_password" android:layout_width="20dp" android:layout_height="20dp" android:layout_alignParentEnd="true" android:layout_centerVertical="true" android:layout_marginEnd="16dp" android:src="@drawable/see" app:tint="#888888"/>
-            </RelativeLayout>
+                <!-- Last Name -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/lexend"
+                    android:text="Last Name"
+                    android:textColor="#888888"
+                    android:textSize="12sp"
+                    android:layout_marginBottom="8dp"/>
 
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Employment Status" android:textColor="#888888" android:textSize="12sp" android:layout_marginBottom="8dp"/>
-            <FrameLayout android:layout_width="match_parent" android:layout_height="48dp" android:background="@drawable/bg_neumorphic_recessed" android:layout_marginBottom="32dp">
-                <Spinner android:id="@+id/spinner_staff_employment_status" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@android:color/transparent" android:enabled="false"/>
-            </FrameLayout>
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:background="@drawable/bg_neumorphic_recessed"
+                    android:layout_marginBottom="16dp">
 
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Educational Attainment" android:textColor="#1E2124" android:textSize="18sp" android:textStyle="bold" android:layout_marginBottom="20dp"/>
+                    <EditText
+                        android:id="@+id/et_staff_last_name"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@android:color/transparent"
+                        android:enabled="false"
+                        android:fontFamily="@font/lexend"
+                        android:paddingHorizontal="16dp"
+                        android:textColor="#212529"
+                        android:textSize="14sp" />
+                </RelativeLayout>
 
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Highest Degree Earned" android:textColor="#888888" android:textSize="12sp" android:layout_marginBottom="8dp"/>
-            <FrameLayout android:layout_width="match_parent" android:layout_height="48dp" android:background="@drawable/bg_neumorphic_recessed" android:layout_marginBottom="16dp">
-                <Spinner android:id="@+id/spinner_staff_degree" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@android:color/transparent" android:enabled="false"/>
-            </FrameLayout>
+                <!-- Email (Read-only) -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/lexend"
+                    android:text="Email (Read-only)"
+                    android:textColor="#888888"
+                    android:textSize="12sp"
+                    android:layout_marginBottom="8dp"/>
 
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Specialization" android:textColor="#888888" android:textSize="12sp" android:layout_marginBottom="8dp"/>
-            <FrameLayout android:layout_width="match_parent" android:layout_height="48dp" android:background="@drawable/bg_neumorphic_recessed" android:layout_marginBottom="16dp">
-                <Spinner android:id="@+id/spinner_staff_specialization" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@android:color/transparent" android:enabled="false"/>
-            </FrameLayout>
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:background="@drawable/bg_neumorphic_recessed"
+                    android:layout_marginBottom="16dp">
 
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="PRC License" android:textColor="#1E2124" android:textSize="18sp" android:layout_marginBottom="12dp"/>
-            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginBottom="40dp">
-                <com.google.android.material.checkbox.MaterialCheckBox android:id="@+id/cb_staff_qualified" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Qualified" android:button="@drawable/bg_checkbox_neumorphic" app:buttonTint="@null" android:paddingStart="12dp" android:enabled="false"/>
-                <com.google.android.material.checkbox.MaterialCheckBox android:id="@+id/cb_staff_na" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="32dp" android:text="NA" android:button="@drawable/bg_checkbox_neumorphic" app:buttonTint="@null" android:paddingStart="12dp" android:enabled="false"/>
+                    <EditText
+                        android:id="@+id/et_staff_email"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@android:color/transparent"
+                        android:enabled="false"
+                        android:fontFamily="@font/lexend"
+                        android:paddingHorizontal="16dp"
+                        android:textColor="#888888"
+                        android:textSize="14sp" />
+                </RelativeLayout>
+
+                <!-- Gender -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/lexend"
+                    android:text="gender"
+                    android:textColor="#888888"
+                    android:textSize="12sp"
+                    android:layout_marginStart="4dp"
+                    android:layout_marginBottom="2dp" />
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:background="@drawable/bg_neumorphic_recessed"
+                    android:layout_marginBottom="16dp">
+
+                    <Spinner
+                        android:id="@+id/spinner_staff_gender"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@android:color/transparent"
+                        android:spinnerMode="dropdown"
+                        android:paddingStart="10dp"
+                        android:paddingEnd="30dp"
+                        android:overlapAnchor="false"
+                        android:popupBackground="@drawable/bg_spinner_popup"
+                        android:enabled="false" />
+
+                    <ImageView
+                        android:layout_width="12dp"
+                        android:layout_height="12dp"
+                        android:layout_gravity="end|center_vertical"
+                        android:layout_marginEnd="12dp"
+                        android:src="@android:drawable/arrow_down_float"
+                        app:tint="@color/text_primary"
+                        android:importantForAccessibility="no" />
+                </FrameLayout>
+
+                <!-- Current Password -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/lexend"
+                    android:text="Current Password"
+                    android:textColor="#888888"
+                    android:textSize="12sp"
+                    android:layout_marginBottom="8dp"/>
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:background="@drawable/bg_neumorphic_recessed"
+                    android:layout_marginBottom="16dp">
+
+                    <EditText
+                        android:id="@+id/et_staff_password"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@android:color/transparent"
+                        android:enabled="false"
+                        android:fontFamily="@font/lexend"
+                        android:inputType="textPassword"
+                        android:paddingHorizontal="16dp"
+                        android:hint="Current Password"
+                        android:textColor="#212529"
+                        android:textSize="14sp" />
+
+                    <ImageView
+                        android:id="@+id/iv_staff_show_password"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_alignParentEnd="true"
+                        android:layout_centerVertical="true"
+                        android:layout_marginEnd="16dp"
+                        android:src="@drawable/see"
+                        app:tint="#888888"
+                        android:clickable="true"
+                        android:focusable="true" />
+                </RelativeLayout>
+
+                <!-- New Password Field -->
+                <LinearLayout
+                    android:id="@+id/ll_staff_change_password_container"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/lexend"
+                        android:text="New Password"
+                        android:textColor="#888888"
+                        android:textSize="12sp"
+                        android:layout_marginBottom="8dp"/>
+
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:background="@drawable/bg_neumorphic_recessed"
+                        android:layout_marginBottom="16dp">
+
+                        <EditText
+                            android:id="@+id/et_staff_new_password"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:background="@android:color/transparent"
+                            android:fontFamily="@font/lexend"
+                            android:inputType="textPassword"
+                            android:paddingHorizontal="16dp"
+                            android:hint="New Password"
+                            android:textColor="#212529"
+                            android:textSize="14sp" />
+
+                        <ImageView
+                            android:id="@+id/iv_staff_show_new_password"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_alignParentEnd="true"
+                            android:layout_centerVertical="true"
+                            android:layout_marginEnd="16dp"
+                            android:src="@drawable/see"
+                            app:tint="#888888"
+                            android:clickable="true"
+                            android:focusable="true" />
+                    </RelativeLayout>
+                </LinearLayout>
+
+                <!-- Employment Status -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/lexend"
+                    android:text="employment status (Read-only)"
+                    android:textColor="#888888"
+                    android:textSize="12sp"
+                    android:layout_marginStart="4dp"
+                    android:layout_marginBottom="2dp" />
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:background="@drawable/bg_neumorphic_recessed"
+                    android:layout_marginBottom="32dp">
+
+                    <Spinner
+                        android:id="@+id/spinner_staff_employment_status"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@android:color/transparent"
+                        android:spinnerMode="dropdown"
+                        android:paddingStart="10dp"
+                        android:paddingEnd="30dp"
+                        android:overlapAnchor="false"
+                        android:popupBackground="@drawable/bg_spinner_popup"
+                        android:enabled="false" />
+
+                    <ImageView
+                        android:layout_width="12dp"
+                        android:layout_height="12dp"
+                        android:layout_gravity="end|center_vertical"
+                        android:layout_marginEnd="12dp"
+                        android:src="@android:drawable/arrow_down_float"
+                        app:tint="@color/text_primary"
+                        android:importantForAccessibility="no" />
+                </FrameLayout>
+
+                <!-- Educational Attainment Header -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/lexend"
+                    android:text="Educational Attainment"
+                    android:textColor="#1E2124"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="20dp" />
+
+                <!-- Highest Degree -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/lexend"
+                    android:text="highest degree earned (Read-only)"
+                    android:textColor="#888888"
+                    android:textSize="12sp"
+                    android:layout_marginStart="4dp"
+                    android:layout_marginBottom="2dp" />
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:background="@drawable/bg_neumorphic_recessed"
+                    android:layout_marginBottom="16dp">
+
+                    <Spinner
+                        android:id="@+id/spinner_staff_degree"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@android:color/transparent"
+                        android:spinnerMode="dropdown"
+                        android:paddingStart="10dp"
+                        android:paddingEnd="30dp"
+                        android:overlapAnchor="false"
+                        android:popupBackground="@drawable/bg_spinner_popup"
+                        android:enabled="false" />
+
+                    <ImageView
+                        android:layout_width="12dp"
+                        android:layout_height="12dp"
+                        android:layout_gravity="end|center_vertical"
+                        android:layout_marginEnd="12dp"
+                        android:src="@android:drawable/arrow_down_float"
+                        app:tint="@color/text_primary"
+                        android:importantForAccessibility="no" />
+                </FrameLayout>
+
+                <!-- Specialization -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/lexend"
+                    android:text="specialization (Read-only)"
+                    android:textColor="#888888"
+                    android:textSize="12sp"
+                    android:layout_marginStart="4dp"
+                    android:layout_marginBottom="2dp" />
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:background="@drawable/bg_neumorphic_recessed"
+                    android:layout_marginBottom="16dp">
+
+                    <Spinner
+                        android:id="@+id/spinner_staff_specialization"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@android:color/transparent"
+                        android:spinnerMode="dropdown"
+                        android:paddingStart="10dp"
+                        android:paddingEnd="30dp"
+                        android:overlapAnchor="false"
+                        android:popupBackground="@drawable/bg_spinner_popup"
+                        android:enabled="false" />
+
+                    <ImageView
+                        android:layout_width="12dp"
+                        android:layout_height="12dp"
+                        android:layout_gravity="end|center_vertical"
+                        android:layout_marginEnd="12dp"
+                        android:src="@android:drawable/arrow_down_float"
+                        app:tint="@color/text_primary"
+                        android:importantForAccessibility="no" />
+                </FrameLayout>
+
+                <!-- PRC License Section -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/lexend"
+                    android:text="PRC License:"
+                    android:textColor="#1E2124"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="12dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="40dp">
+
+                    <com.google.android.material.checkbox.MaterialCheckBox
+                        android:id="@+id/cb_staff_qualified"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/lexend"
+                        android:text="Qualified"
+                        android:textColor="#888888"
+                        android:textSize="18sp"
+                        android:button="@drawable/bg_checkbox_neumorphic"
+                        app:buttonTint="@null"
+                        android:background="@android:color/transparent"
+                        android:paddingStart="12dp"
+                        android:minWidth="0dp"
+                        android:minHeight="0dp"
+                        android:clickable="false"
+                        android:focusable="false"/>
+
+                    <com.google.android.material.checkbox.MaterialCheckBox
+                        android:id="@+id/cb_staff_na"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="32dp"
+                        android:fontFamily="@font/lexend"
+                        android:text="NA"
+                        android:textColor="#888888"
+                        android:textSize="18sp"
+                        android:button="@drawable/bg_checkbox_neumorphic"
+                        app:buttonTint="@null"
+                        android:background="@android:color/transparent"
+                        android:paddingStart="12dp"
+                        android:minWidth="0dp"
+                        android:minHeight="0dp"
+                        android:clickable="false"
+                        android:focusable="false"/>
+                </LinearLayout>
+
+                <!-- Edit Action Buttons -->
+                <LinearLayout
+                    android:id="@+id/ll_staff_edit_actions"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:visibility="gone"
+                    android:layout_marginBottom="24dp">
+
+                    <Button
+                        android:id="@+id/btn_staff_cancel_edit"
+                        android:layout_width="0dp"
+                        android:layout_height="50dp"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="8dp"
+                        android:backgroundTint="#6C757D"
+                        android:text="Cancel"
+                        android:textAllCaps="false"
+                        android:fontFamily="@font/lexend" />
+
+                    <Button
+                        android:id="@+id/btn_staff_save_profile"
+                        android:layout_width="0dp"
+                        android:layout_height="50dp"
+                        android:layout_weight="1"
+                        android:layout_marginStart="8dp"
+                        android:backgroundTint="#1E2124"
+                        android:text="Save"
+                        android:textAllCaps="false"
+                        android:fontFamily="@font/lexend" />
+                </LinearLayout>
+
+                <!-- Logout Button -->
+                <Button
+                    android:id="@+id/btn_staff_logout"
+                    android:layout_width="match_parent"
+                    android:layout_height="50dp"
+                    android:backgroundTint="#DC3545"
+                    android:text="Logout"
+                    android:textAllCaps="false"
+                    android:fontFamily="@font/lexend"
+                    android:textColor="#FFFFFF"
+                    android:layout_marginBottom="40dp"/>
+
             </LinearLayout>
-
-            <LinearLayout android:id="@+id/ll_staff_edit_actions" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:visibility="gone" android:layout_marginBottom="24dp">
-                <Button android:id="@+id/btn_staff_cancel_edit" android:layout_width="0dp" android:layout_height="50dp" android:layout_weight="1" android:layout_marginEnd="8dp" android:backgroundTint="#6C757D" android:text="Cancel"/>
-                <Button android:id="@+id/btn_staff_save_profile" android:layout_width="0dp" android:layout_height="50dp" android:layout_weight="1" android:layout_marginStart="8dp" android:backgroundTint="#1E2124" android:text="Save"/>
-            </LinearLayout>
-
-            <Button android:id="@+id/btn_staff_logout" android:layout_width="match_parent" android:layout_height="50dp" android:backgroundTint="#DC3545" android:text="Logout" android:textColor="#FFFFFF"/>
-
         </LinearLayout>
     </RelativeLayout>
 </ScrollView>

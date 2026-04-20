@@ -1,5 +1,8 @@
 package com.example.appssist
 
+import android.animation.ObjectAnimator
+import android.animation.PropertyValuesHolder
+import android.animation.ValueAnimator
 import android.app.Dialog
 import android.content.Context
 import android.content.Intent
@@ -23,6 +26,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.Window
+import android.view.animation.AccelerateDecelerateInterpolator
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.*
@@ -106,8 +110,8 @@ class MainActivity : AppCompatActivity() {
         }
 
         loadRecentActivities()
-    }
 
+    }
     private fun setupQuickActions() {
         binding.btnCreateSchedule.setOnClickListener {
             Toast.makeText(this, "Create Schedule clicked", Toast.LENGTH_SHORT).show()
@@ -1532,6 +1536,13 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateNavUI(nav: String) {
         if (currentNav == nav) return
+        
+        // Trigger animations for the navigation anchor and the main scrollable content area
+        TransitionManager.beginDelayedTransition(binding.navAnchor, AutoTransition())
+        (binding.scrollContent.getChildAt(0) as? ViewGroup)?.let {
+            TransitionManager.beginDelayedTransition(it, AutoTransition())
+        }
+
         currentNav = nav
         
         val email = currentUserFaculty?.email?.lowercase()?.trim() ?: ""
@@ -1555,8 +1566,6 @@ class MainActivity : AppCompatActivity() {
 
         val activeBg = ResourcesCompat.getDrawable(resources, R.drawable.bg_active_nav, theme)
         val activeColor = Color.parseColor("#1E2124")
-
-        TransitionManager.beginDelayedTransition(binding.bottomNavContainer, AutoTransition())
 
         when (nav) {
             "home" -> {
@@ -1766,7 +1775,9 @@ class MainActivity : AppCompatActivity() {
 
         // Visibility Toggles
         setupPasswordToggle(binding.layoutProfile.ivShowPassword, binding.layoutProfile.etPassword)
+        setupPasswordToggle(binding.layoutProfile.ivShowNewPassword, binding.layoutProfile.etNewPassword)
         setupPasswordToggle(binding.layoutStaffProfile.ivStaffShowPassword, binding.layoutStaffProfile.etStaffPassword)
+        setupPasswordToggle(binding.layoutStaffProfile.ivStaffShowNewPassword, binding.layoutStaffProfile.etStaffNewPassword)
 
         toggleProfileEdit(false, isAdmin = true)
         toggleProfileEdit(false, isAdmin = false)
@@ -1795,6 +1806,8 @@ class MainActivity : AppCompatActivity() {
             l.etLastName.isEnabled = enabled
             l.spinnerGender.isEnabled = enabled
             l.etPassword.isEnabled = enabled
+            l.etNewPassword.isEnabled = enabled
+            l.llChangePasswordContainer.visibility = if (enabled) View.VISIBLE else View.GONE
             l.spinnerEmploymentStatus.isEnabled = enabled
             l.spinnerDegree.isEnabled = enabled
             l.spinnerSpecialization.isEnabled = enabled
@@ -1808,11 +1821,16 @@ class MainActivity : AppCompatActivity() {
             l.etStaffLastName.isEnabled = enabled
             l.spinnerStaffGender.isEnabled = enabled
             l.etStaffPassword.isEnabled = enabled
-            l.spinnerStaffEmploymentStatus.isEnabled = enabled
-            l.spinnerStaffDegree.isEnabled = enabled
-            l.spinnerStaffSpecialization.isEnabled = enabled
-            l.cbStaffQualified.isEnabled = enabled
-            l.cbStaffNa.isEnabled = enabled
+            l.etStaffNewPassword.isEnabled = enabled
+            l.llStaffChangePasswordContainer.visibility = if (enabled) View.VISIBLE else View.GONE
+            
+            // Employment Status, Educational Attainment and PRC License are ALWAYS read-only for staff
+            l.spinnerStaffEmploymentStatus.isEnabled = false
+            l.spinnerStaffDegree.isEnabled = false
+            l.spinnerStaffSpecialization.isEnabled = false
+            l.cbStaffQualified.isEnabled = false
+            l.cbStaffNa.isEnabled = false
+
             l.llStaffEditActions.visibility = if (enabled) View.VISIBLE else View.GONE
             l.btnStaffEditProfile.visibility = if (enabled) View.GONE else View.VISIBLE
         }
@@ -1822,9 +1840,13 @@ class MainActivity : AppCompatActivity() {
         if (isAdmin) {
             binding.layoutProfile.etFirstName.setText(data.first_name)
             binding.layoutProfile.etLastName.setText(data.last_name)
+            binding.layoutProfile.etPassword.setText("")
+            binding.layoutProfile.etNewPassword.setText("")
         } else {
             binding.layoutStaffProfile.etStaffFirstName.setText(data.first_name)
             binding.layoutStaffProfile.etStaffLastName.setText(data.last_name)
+            binding.layoutStaffProfile.etStaffPassword.setText("")
+            binding.layoutStaffProfile.etStaffNewPassword.setText("")
         }
         updateSpecializationCheckboxes()
     }
@@ -1834,6 +1856,13 @@ class MainActivity : AppCompatActivity() {
         redirectToLogin()
     }
 
+    private fun validatePassword(password: String): Boolean {
+        if (password.length < 8) return false
+        if (!password.any { it.isUpperCase() }) return false
+        if (!password.any { "!@#$%^&*".contains(it) }) return false
+        return true
+    }
+
     private fun saveProfileChanges(isAdmin: Boolean) {
         val l = if (isAdmin) binding.layoutProfile else null
         val ls = if (!isAdmin) binding.layoutStaffProfile else null
@@ -1841,6 +1870,20 @@ class MainActivity : AppCompatActivity() {
         val newFirstName = l?.etFirstName?.text?.toString() ?: ls?.etStaffFirstName?.text?.toString() ?: ""
         val newLastName = l?.etLastName?.text?.toString() ?: ls?.etStaffLastName?.text?.toString() ?: ""
         
+        val currentPassword = l?.etPassword?.text?.toString() ?: ls?.etStaffPassword?.text?.toString() ?: ""
+        val newPassword = l?.etNewPassword?.text?.toString() ?: ls?.etStaffNewPassword?.text?.toString() ?: ""
+
+        if (newPassword.isNotEmpty()) {
+            if (currentPassword.isEmpty()) {
+                Toast.makeText(this, "Please enter your Current Password to change it", Toast.LENGTH_SHORT).show()
+                return
+            }
+            if (!validatePassword(newPassword)) {
+                Toast.makeText(this, "New Password Must be: at least 8 characters, 1 uppercase letter (A-Z), 1 special character (!@#$%^&*)", Toast.LENGTH_LONG).show()
+                return
+            }
+        }
+
         Toast.makeText(this, "Updating profile...", Toast.LENGTH_SHORT).show()
 
         lifecycleScope.launch {
@@ -1850,14 +1893,28 @@ class MainActivity : AppCompatActivity() {
                     "last_name" to newLastName,
                     "specialization" to selectedSpecIds.toList()
                 )
+                
+                if (newPassword.isNotEmpty()) {
+                    updateData["current_password"] = currentPassword
+                    updateData["new_password"] = newPassword
+                }
+
                 val updatedFaculty = RetrofitClient.apiService.updateProfile(updateData)
                 currentUserFaculty = updatedFaculty
                 Toast.makeText(this@MainActivity, "Profile updated!", Toast.LENGTH_SHORT).show()
                 toggleProfileEdit(false, isAdmin)
                 updateUserDataUI(updatedFaculty)
+                
+                // Clear password fields
+                l?.etPassword?.setText("")
+                l?.etNewPassword?.setText("")
+                ls?.etStaffPassword?.setText("")
+                ls?.etStaffNewPassword?.setText("")
+                
             } catch (e: Exception) {
                 Log.e("MainActivity", "Update failed", e)
-                Toast.makeText(this@MainActivity, "Update failed", Toast.LENGTH_SHORT).show()
+                val errorMsg = if (e is HttpException && e.code() == 400) "Invalid current password or update data" else "Update failed"
+                Toast.makeText(this@MainActivity, errorMsg, Toast.LENGTH_SHORT).show()
             }
         }
     }
