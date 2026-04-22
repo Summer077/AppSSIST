@@ -53,6 +53,19 @@ data class FacultyListItem(
     val role: String? = null
 )
 
+data class FacultyRequest(
+    @SerializedName("first_name") val first_name: String,
+    @SerializedName("last_name") val last_name: String,
+    val email: String,
+    val gender: String?,
+    val password: String?,
+    val role: String?,
+    @SerializedName("employment_status") val employment_status: String?,
+    @SerializedName("highest_degree") val highest_degree: String?,
+    val specialization: List<Int>,
+    @SerializedName("prc_licensed") val prc_licensed: String?
+)
+
 data class CurriculumResponse(
     val id: Int,
     val name: String,

@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:background="@drawable/bg_bottom_nav"
+    android:backgroundTint="#F0F2F5">
+
+    <TextView
+        android:id="@+id/tv_header"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Add Room"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="#1E2124"
+        android:fontFamily="@font/lexend"
+        android:layout_marginBottom="16dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:weightSum="2"
+        android:layout_marginBottom="12dp">
+
+        <FrameLayout
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_neumorphic_recessed"
+            android:paddingHorizontal="12dp"
+            android:layout_marginEnd="8dp">
+            <EditText
+                android:id="@+id/et_room_name"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:hint="Room name"
+                android:background="@null"
+                android:textSize="13sp"
+                android:fontFamily="@font/lexend"
+                android:textColor="#1E2124" />
+        </FrameLayout>
+
+        <FrameLayout
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_neumorphic_recessed"
+            android:paddingHorizontal="12dp">
+            <EditText
+                android:id="@+id/et_room_number"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:hint="Room number"
+                android:background="@null"
+                android:textSize="13sp"
+                android:fontFamily="@font/lexend"
+                android:textColor="#1E2124" />
+        </FrameLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:weightSum="2"
+        android:layout_marginBottom="12dp">
+
+        <FrameLayout
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_neumorphic_recessed"
+            android:paddingHorizontal="12dp"
+            android:layout_marginEnd="8dp">
+            <EditText
+                android:id="@+id/et_capacity"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:hint="Capacity"
+                android:inputType="number"
+                android:background="@null"
+                android:textSize="13sp"
+                android:fontFamily="@font/lexend"
+                android:textColor="#1E2124" />
+        </FrameLayout>
+
+        <FrameLayout
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_neumorphic_recessed"
+            android:paddingHorizontal="12dp">
+            <Spinner
+                android:id="@+id/spinner_campus"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@null"
+                android:overlapAnchor="false"
+                android:popupBackground="@drawable/bg_spinner_popup" />
+            <ImageView
+                android:layout_width="10dp"
+                android:layout_height="10dp"
+                android:layout_gravity="end|center_vertical"
+                android:src="@android:drawable/arrow_down_float"
+                app:tint="#888888" />
+        </FrameLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:weightSum="2"
+        android:layout_marginBottom="24dp">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Room type:"
+                android:textSize="12sp"
+                android:fontFamily="@font/lexend"
+                android:textColor="#1E2124"
+                android:layout_marginBottom="4dp" />
+            <com.google.android.material.checkbox.MaterialCheckBox
+                android:id="@+id/cb_lecture"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Lecture"
+                android:textSize="12sp"
+                android:fontFamily="@font/lexend"
+                android:button="@drawable/bg_checkbox_neumorphic"
+                app:buttonTint="@null"
+                android:minHeight="0dp"
+                android:paddingStart="6dp" />
+            <com.google.android.material.checkbox.MaterialCheckBox
+                android:id="@+id/cb_laboratory"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Laboratory"
+                android:textSize="12sp"
+                android:fontFamily="@font/lexend"
+                android:button="@drawable/bg_checkbox_neumorphic"
+                app:buttonTint="@null"
+                android:minHeight="0dp"
+                android:paddingStart="6dp" />
+        </LinearLayout>
+
+        <FrameLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@drawable/bg_neumorphic_recessed"
+            android:padding="12dp">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Arlegui"
+                    android:textSize="13sp"
+                    android:fontFamily="@font/lexend"
+                    android:textColor="#1E2124"
+                    android:paddingVertical="4dp" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Casal"
+                    android:textSize="13sp"
+                    android:fontFamily="@font/lexend"
+                    android:textColor="#1E2124"
+                    android:paddingVertical="4dp" />
+            </LinearLayout>
+        </FrameLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="end">
+        <Button
+            android:id="@+id/btn_cancel"
+            android:layout_width="120dp"
+            android:layout_height="48dp"
+            android:text="Cancel"
+            android:textAllCaps="false"
+            android:backgroundTint="#E9ECEF"
+            android:textColor="#1E2124"
+            android:fontFamily="@font/lexend"
+            android:layout_marginEnd="12dp"
+            app:cornerRadius="12dp" />
+        <Button
+            android:id="@+id/btn_save"
+            android:layout_width="120dp"
+            android:layout_height="48dp"
+            android:text="Save"
+            android:textAllCaps="false"
+            android:backgroundTint="#1E2124"
+            android:textColor="#FFFFFF"
+            android:fontFamily="@font/lexend"
+            app:cornerRadius="12dp" />
+    </LinearLayout>
+</LinearLayout>

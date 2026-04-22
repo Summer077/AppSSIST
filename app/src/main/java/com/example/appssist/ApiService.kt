@@ -47,11 +47,26 @@ interface ApiService {
     @GET("api/sections/")
     suspend fun getSections(): List<SectionResponse>
 
+    @POST("api/sections/")
+    suspend fun addSection(
+        @Body data: @JvmSuppressWildcards Map<String, Any?>
+    ): SectionResponse
+
     @GET("api/faculty-list/")
     suspend fun getFacultyList(): List<FacultyListItem>
 
+    @POST("api/faculty-list/")
+    suspend fun addFaculty(
+        @Body request: FacultyRequest
+    ): FacultyListItem
+
     @GET("api/rooms/")
     suspend fun getRooms(): List<RoomResponse>
+
+    @POST("api/rooms/")
+    suspend fun addRoom(
+        @Body data: @JvmSuppressWildcards Map<String, Any?>
+    ): RoomResponse
 
     @GET("api/faculty/{id}/schedule-data/")
     suspend fun getFacultySchedule(

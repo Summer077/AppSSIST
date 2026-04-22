@@ -46,10 +46,10 @@ class MainActivity : AppCompatActivity() {
     private var curriculums = listOf<CurriculumResponse>()
     private var sections = listOf<SectionResponse>()
     private var courses = listOf<CourseResponse>()
-    
+
     private var currentUserFaculty: FacultyData? = null
     private var mySchedules = listOf<ScheduleItemResponse>()
-    
+
     private var availableLevels = mutableListOf<Pair<Int, Int>>()
 
     private var selectedCurriculumId: Int? = null
@@ -66,10 +66,26 @@ class MainActivity : AppCompatActivity() {
     // Staff Carousel Data
     private var currentCarouselIndex = 0
     private val carouselFeatures = listOf(
-        Triple("Automated Schedule Generation", "Automatically generates class schedules based on room availability, faculty load, and subject requirements, ensuring conflict-free assignments.", R.drawable.staff_schedule),
-        Triple("Conflict Detection and Validation", "Ensures all schedules are free from overlaps. The system alerts the admin of any time or room conflicts during manual adjustments.", R.drawable.staff_conflict),
-        Triple("Faculty & Room Management", "Centralized management of faculty profiles, teaching loads, and classroom details for efficient scheduling and resource allocation.", R.drawable.staff_faculty),
-        Triple("Real-time Schedule Updates", "Instantly reflects any schedule or room changes made by the admin, allowing faculty to view updated timetables in real time.", R.drawable.staff_realtime)
+        Triple(
+            "Automated Schedule Generation",
+            "Automatically generates class schedules based on room availability, faculty load, and subject requirements, ensuring conflict-free assignments.",
+            R.drawable.staff_schedule
+        ),
+        Triple(
+            "Conflict Detection and Validation",
+            "Ensures all schedules are free from overlaps. The system alerts the admin of any time or room conflicts during manual adjustments.",
+            R.drawable.staff_conflict
+        ),
+        Triple(
+            "Faculty & Room Management",
+            "Centralized management of faculty profiles, teaching loads, and classroom details for efficient scheduling and resource allocation.",
+            R.drawable.staff_faculty
+        ),
+        Triple(
+            "Real-time Schedule Updates",
+            "Instantly reflects any schedule or room changes made by the admin, allowing faculty to view updated timetables in real time.",
+            R.drawable.staff_realtime
+        )
     )
     private val carouselHandler = Handler(Looper.getMainLooper())
     private val carouselRunnable = object : Runnable {
@@ -82,9 +98,9 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
+
         RetrofitClient.init(this)
-        
+
         binding = ActivityDashboardBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
@@ -112,37 +128,43 @@ class MainActivity : AppCompatActivity() {
         loadRecentActivities()
 
     }
+
     private fun setupQuickActions() {
         binding.btnCreateSchedule.setOnClickListener {
-            Toast.makeText(this, "Create Schedule clicked", Toast.LENGTH_SHORT).show()
+            when {
+                binding.layoutSchedule.llFacultySection.visibility == View.VISIBLE -> showAddFacultyDialog()
+                binding.layoutSchedule.llSectionSection.visibility == View.VISIBLE -> showAddSectionDialog()
+                binding.layoutSchedule.llRoomSection.visibility == View.VISIBLE -> showAddRoomDialog()
+                else -> Toast.makeText(this, "Create Schedule clicked", Toast.LENGTH_SHORT).show()
+            }
         }
+
         binding.btnAddCourse.setOnClickListener {
             handleCourseAddClick()
         }
         binding.btnAddStaff.setOnClickListener {
-            Toast.makeText(this, "Add Staff clicked", Toast.LENGTH_SHORT).show()
+            showAddFacultyDialog()
         }
         binding.btnAddSection.setOnClickListener {
-            Toast.makeText(this, "Add Section clicked", Toast.LENGTH_SHORT).show()
+            showAddSectionDialog()  // ← was Toast
         }
         binding.btnAddRoom.setOnClickListener {
-            Toast.makeText(this, "Add Room clicked", Toast.LENGTH_SHORT).show()
+            showAddRoomDialog()     // ← was Toast
         }
-        
-        // Stats Cards Listeners
-        binding.cardTotalStaff.setOnClickListener {
-            showStaffDialog()
-        }
-        binding.cardTotalSections.setOnClickListener {
-            showSectionsDialog()
-        }
+
+        binding.cardTotalStaff.setOnClickListener { showStaffDialog() }
+        binding.cardTotalSections.setOnClickListener { showSectionsDialog() }
     }
 
     private fun handleCourseAddClick() {
         if (selectedCurriculumId != null) {
             showAddCourseDialog()
         } else {
-            Toast.makeText(this, "Please select a Curriculum first in the Course tab", Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                this,
+                "Please select a Curriculum first in the Course tab",
+                Toast.LENGTH_SHORT
+            ).show()
             updateNavUI("course")
         }
     }
@@ -152,17 +174,197 @@ class MainActivity : AppCompatActivity() {
         binding.navCourse.setOnClickListener { updateNavUI("course") }
         binding.navSchedule.setOnClickListener { updateNavUI("schedule") }
         binding.navProfile.setOnClickListener { updateNavUI("profile") }
-        
+
         // Staff Nav Listeners
         val staffHome = findViewById<View>(R.id.nav_staff_home)
         val staffSchedule = findViewById<View>(R.id.nav_staff_schedule)
         val staffProfile = findViewById<View>(R.id.nav_staff_profile)
-        
+
         staffHome?.setOnClickListener { updateNavUI("home") }
         staffSchedule?.setOnClickListener { updateNavUI("schedule") }
         staffProfile?.setOnClickListener { updateNavUI("profile") }
     }
 
+    private fun showAddSectionDialog() {
+        val dialog = Dialog(this)
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+        dialog.setContentView(R.layout.dialog_add_section)
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.window?.setLayout(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+
+        val etSectionName = dialog.findViewById<EditText>(R.id.et_section_name)
+        val etMaxStudents = dialog.findViewById<EditText>(R.id.et_max_students)
+        val spinnerCurriculum = dialog.findViewById<Spinner>(R.id.spinner_curriculum)
+        val spinnerYearLevel = dialog.findViewById<Spinner>(R.id.spinner_year_level)
+        val spinnerSemester = dialog.findViewById<Spinner>(R.id.spinner_semester)
+
+        // Populate curriculum spinner
+        val curriculumNames = mutableListOf("Select Curriculum")
+        curriculumNames.addAll(curriculums.map { "${it.name} (${it.year})" })
+        spinnerCurriculum.adapter = createPlaceholderSpinnerAdapter(
+            this, "Select Curriculum", curriculums.map { "${it.name} (${it.year})" }
+        )
+
+        spinnerYearLevel.adapter = createPlaceholderSpinnerAdapter(
+            this, "Year Level", listOf("1st Year", "2nd Year", "3rd Year", "4th Year")
+        )
+
+        spinnerSemester.adapter = createPlaceholderSpinnerAdapter(
+            this, "Semester", listOf("1st Semester", "2nd Semester")
+        )
+
+        dialog.findViewById<Button>(R.id.btn_cancel).setOnClickListener { dialog.dismiss() }
+
+        dialog.findViewById<Button>(R.id.btn_save).setOnClickListener {
+            val name = etSectionName.text.toString().trim()
+            val maxStudents = etMaxStudents.text.toString().toIntOrNull() ?: 0
+
+            val curriculumPos = spinnerCurriculum.selectedItemPosition
+            val yearPos = spinnerYearLevel.selectedItemPosition
+            val semPos = spinnerSemester.selectedItemPosition
+
+            if (name.isEmpty()) {
+                Toast.makeText(this, "Please enter a section name", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            if (curriculumPos == 0 || yearPos == 0 || semPos == 0) {
+                Toast.makeText(this, "Please select all required fields", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            val selectedCurriculumIdForSection = curriculums[curriculumPos - 1].id
+            val yearLevel = yearPos       // 1 = 1st Year, 2 = 2nd Year, etc.
+            val semester = semPos         // 1 = 1st Sem, 2 = 2nd Sem
+
+            saveSection(name, selectedCurriculumIdForSection, yearLevel, semester, maxStudents, dialog)
+        }
+
+        dialog.show()
+    }
+
+    private fun showAddRoomDialog() {
+        val dialog = Dialog(this)
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+        dialog.setContentView(R.layout.dialog_add_room)
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.window?.setLayout(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+
+        val etRoomName = dialog.findViewById<EditText>(R.id.et_room_name)
+        val etRoomNumber = dialog.findViewById<EditText>(R.id.et_room_number)
+        val etCapacity = dialog.findViewById<EditText>(R.id.et_capacity)
+        val spinnerCampus = dialog.findViewById<Spinner>(R.id.spinner_campus)
+        val cbLecture = dialog.findViewById<com.google.android.material.checkbox.MaterialCheckBox>(R.id.cb_lecture)
+        val cbLaboratory = dialog.findViewById<com.google.android.material.checkbox.MaterialCheckBox>(R.id.cb_laboratory)
+
+        spinnerCampus.adapter = createPlaceholderSpinnerAdapter(
+            this, "Select Campus", listOf("Arlegui", "Casal")
+        )
+
+        // Mutual exclusivity for room type
+        cbLecture.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) cbLaboratory.isChecked = false
+        }
+        cbLaboratory.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) cbLecture.isChecked = false
+        }
+
+        dialog.findViewById<Button>(R.id.btn_cancel).setOnClickListener { dialog.dismiss() }
+
+        dialog.findViewById<Button>(R.id.btn_save).setOnClickListener {
+            val name = etRoomName.text.toString().trim()
+            val roomNumber = etRoomNumber.text.toString().trim()
+            val capacity = etCapacity.text.toString().toIntOrNull() ?: 0
+            val campusPos = spinnerCampus.selectedItemPosition
+            val roomType = when {
+                cbLecture.isChecked -> "Lecture"
+                cbLaboratory.isChecked -> "Laboratory"
+                else -> null
+            }
+
+            if (name.isEmpty()) {
+                Toast.makeText(this, "Please enter a room name", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            if (campusPos == 0) {
+                Toast.makeText(this, "Please select a campus", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            if (roomType == null) {
+                Toast.makeText(this, "Please select a room type", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            val campus = spinnerCampus.selectedItem.toString()
+            saveRoom(name, roomNumber, capacity, campus, roomType, dialog)
+        }
+
+        dialog.show()
+    }
+
+    private fun saveRoom(
+        name: String,
+        roomNumber: String,
+        capacity: Int,
+        campus: String,
+        roomType: String,
+        dialog: Dialog
+    ) {
+        lifecycleScope.launch {
+            try {
+                val request = mapOf(
+                    "name" to name,
+                    "room_number" to roomNumber,
+                    "capacity" to capacity,
+                    "campus" to campus,
+                    "room_type" to roomType
+                )
+                RetrofitClient.apiService.addRoom(request)
+                Toast.makeText(this@MainActivity, "Room added successfully", Toast.LENGTH_SHORT).show()
+                dialog.dismiss()
+                if (binding.layoutSchedule.llRoomSection.visibility == View.VISIBLE) {
+                    loadRoomListIntoSchedule()
+                }
+            } catch (e: Exception) {
+                Log.e("MainActivity", "Failed to add room", e)
+                Toast.makeText(this@MainActivity, "Failed to add room", Toast.LENGTH_SHORT).show()
+                if (e is HttpException && e.code() == 401) handleSessionFailure("Unauthorized", true)
+            }
+        }
+    }
+    private fun saveSection(
+        name: String,
+        curriculumId: Int,
+        yearLevel: Int,
+        semester: Int,
+        maxStudents: Int,
+        dialog: Dialog
+    ) {
+        lifecycleScope.launch {
+            try {
+                val request = mapOf(
+                    "name" to name,
+                    "curriculum" to curriculumId,
+                    "year_level" to yearLevel,
+                    "semester" to semester,
+                    "max_students" to maxStudents
+                )
+                RetrofitClient.apiService.addSection(request)
+                Toast.makeText(this@MainActivity, "Section added successfully", Toast.LENGTH_SHORT).show()
+                dialog.dismiss()
+                fetchDashboardData()
+            } catch (e: Exception) {
+                Log.e("MainActivity", "Failed to add section", e)
+                Toast.makeText(this@MainActivity, "Failed to add section", Toast.LENGTH_SHORT).show()
+                if (e is HttpException && e.code() == 401) handleSessionFailure("Unauthorized", true)
+            }
+        }
+    }
     private fun setupCourseBackend() {
         binding.layoutCourse.btnAddCourseTop.setOnClickListener {
             handleCourseAddClick()
@@ -183,7 +385,7 @@ class MainActivity : AppCompatActivity() {
             tab.setBackgroundResource(R.drawable.bg_neumorphic_tab)
             tab.setOnClickListener {
                 updateScheduleTabsUI(tab, adminTabs)
-                when(tab.id) {
+                when (tab.id) {
                     R.id.tab_my_schedule -> {
                         binding.layoutSchedule.llMyScheduleSection.visibility = View.VISIBLE
                         binding.layoutSchedule.llFacultySection.visibility = View.GONE
@@ -191,6 +393,7 @@ class MainActivity : AppCompatActivity() {
                         binding.layoutSchedule.llRoomSection.visibility = View.GONE
                         loadMySchedule(isAdmin = true)
                     }
+
                     R.id.tab_faculty -> {
                         binding.layoutSchedule.llMyScheduleSection.visibility = View.GONE
                         binding.layoutSchedule.llFacultySection.visibility = View.VISIBLE
@@ -198,6 +401,7 @@ class MainActivity : AppCompatActivity() {
                         binding.layoutSchedule.llRoomSection.visibility = View.GONE
                         loadFacultyListIntoSchedule()
                     }
+
                     R.id.tab_section -> {
                         binding.layoutSchedule.llMyScheduleSection.visibility = View.GONE
                         binding.layoutSchedule.llFacultySection.visibility = View.GONE
@@ -205,6 +409,7 @@ class MainActivity : AppCompatActivity() {
                         binding.layoutSchedule.llRoomSection.visibility = View.GONE
                         loadSectionListIntoSchedule()
                     }
+
                     R.id.tab_room -> {
                         binding.layoutSchedule.llMyScheduleSection.visibility = View.GONE
                         binding.layoutSchedule.llFacultySection.visibility = View.GONE
@@ -216,6 +421,10 @@ class MainActivity : AppCompatActivity() {
             }
         }
         binding.layoutSchedule.tabMySchedule.performClick()
+
+        binding.layoutSchedule.btnAddFacultyTop.setOnClickListener {
+            showAddFacultyDialog()
+        }
 
         // Admin Day Selector
         val adminDays = listOf(
@@ -254,7 +463,7 @@ class MainActivity : AppCompatActivity() {
         binding.layoutStaffSchedule.btnStaffDayMon.performClick()
     }
 
-    private fun getDayName(viewId: Int): String = when(viewId) {
+    private fun getDayName(viewId: Int): String = when (viewId) {
         R.id.btn_day_mon -> "Monday"
         R.id.btn_day_tue -> "Tuesday"
         R.id.btn_day_wed -> "Wednesday"
@@ -264,7 +473,7 @@ class MainActivity : AppCompatActivity() {
         else -> "Monday"
     }
 
-    private fun getStaffDayName(viewId: Int): String = when(viewId) {
+    private fun getStaffDayName(viewId: Int): String = when (viewId) {
         R.id.btn_staff_day_mon -> "Monday"
         R.id.btn_staff_day_tue -> "Tuesday"
         R.id.btn_staff_day_wed -> "Wednesday"
@@ -283,7 +492,7 @@ class MainActivity : AppCompatActivity() {
                 val response = RetrofitClient.apiService.getFacultySchedule(facultyId)
                 mySchedules = response.schedules ?: emptyList()
                 updateDayDots(isAdmin)
-                
+
                 val selectedDay = if (isAdmin) {
                     when {
                         binding.layoutSchedule.btnDayMon.isSelected -> "Monday"
@@ -308,13 +517,16 @@ class MainActivity : AppCompatActivity() {
                 displayScheduleForDay(selectedDay, isAdmin)
             } catch (e: Exception) {
                 Log.e("MainActivity", "Failed to load schedule", e)
-                if (e is HttpException && e.code() == 401) handleSessionFailure("Unauthorized", true)
+                if (e is HttpException && e.code() == 401) handleSessionFailure(
+                    "Unauthorized",
+                    true
+                )
             }
         }
     }
 
     private fun getDayStringFromInt(dayInt: Int?): String {
-        return when(dayInt) {
+        return when (dayInt) {
             0 -> "Monday"
             1 -> "Tuesday"
             2 -> "Wednesday"
@@ -350,17 +562,24 @@ class MainActivity : AppCompatActivity() {
         dayViews.forEach { (dayName, view) ->
             val dotContainer = view.getChildAt(1) as? LinearLayout
             dotContainer?.removeAllViews()
-            
-            val daySchedules = mySchedules.filter { getDayStringFromInt(it.day).equals(dayName, ignoreCase = true) }
+
+            val daySchedules = mySchedules.filter {
+                getDayStringFromInt(it.day).equals(
+                    dayName,
+                    ignoreCase = true
+                )
+            }
             daySchedules.forEach { schedule ->
                 val dot = View(this).apply {
                     layoutParams = LinearLayout.LayoutParams(
                         (6 * resources.displayMetrics.density).toInt(),
                         (6 * resources.displayMetrics.density).toInt()
                     ).apply { setMargins(1, 1, 1, 1) }
-                    background = ResourcesCompat.getDrawable(resources, R.drawable.bg_circle_generic, theme)
+                    background =
+                        ResourcesCompat.getDrawable(resources, R.drawable.bg_circle_generic, theme)
                     val colorStr = schedule.courseColor ?: "#888888"
-                    backgroundTintList = android.content.res.ColorStateList.valueOf(Color.parseColor(colorStr))
+                    backgroundTintList =
+                        android.content.res.ColorStateList.valueOf(Color.parseColor(colorStr))
                 }
                 dotContainer?.addView(dot)
             }
@@ -368,15 +587,20 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun displayScheduleForDay(dayName: String, isAdmin: Boolean) {
-        val gridContainer = if (isAdmin) binding.layoutSchedule.llTimetableGrid else binding.layoutStaffSchedule.llStaffTimetableGrid
-        val cardsContainer = if (isAdmin) binding.layoutSchedule.flTimetableCards else binding.layoutStaffSchedule.flStaffTimetableCards
-        val noScheduleState = if (isAdmin) binding.layoutSchedule.llNoScheduleState else binding.layoutStaffSchedule.llStaffNoScheduleState
-        val timetableContainer = if (isAdmin) binding.layoutSchedule.rlTimetableContainer else binding.layoutStaffSchedule.rlStaffTimetableContainer
+        val gridContainer =
+            if (isAdmin) binding.layoutSchedule.llTimetableGrid else binding.layoutStaffSchedule.llStaffTimetableGrid
+        val cardsContainer =
+            if (isAdmin) binding.layoutSchedule.flTimetableCards else binding.layoutStaffSchedule.flStaffTimetableCards
+        val noScheduleState =
+            if (isAdmin) binding.layoutSchedule.llNoScheduleState else binding.layoutStaffSchedule.llStaffNoScheduleState
+        val timetableContainer =
+            if (isAdmin) binding.layoutSchedule.rlTimetableContainer else binding.layoutStaffSchedule.rlStaffTimetableContainer
 
         gridContainer.removeAllViews()
         cardsContainer.removeAllViews()
 
-        val daySchedules = mySchedules.filter { getDayStringFromInt(it.day).equals(dayName, ignoreCase = true) }
+        val daySchedules =
+            mySchedules.filter { getDayStringFromInt(it.day).equals(dayName, ignoreCase = true) }
 
         if (daySchedules.isEmpty()) {
             noScheduleState.visibility = View.VISIBLE
@@ -384,19 +608,21 @@ class MainActivity : AppCompatActivity() {
         } else {
             noScheduleState.visibility = View.GONE
             timetableContainer.visibility = View.VISIBLE
-            
+
             // Build the grid from 7:30 AM to 9:30 PM (21:30)
             var currentMinutes = 450 // 7:30 AM
             val endMinutes = 1290 // 9:30 PM
-            
+
             while (currentMinutes <= endMinutes) {
-                val rowView = LayoutInflater.from(this).inflate(R.layout.item_timetable_grid_row, gridContainer, false)
+                val rowView = LayoutInflater.from(this)
+                    .inflate(R.layout.item_timetable_grid_row, gridContainer, false)
                 val hour = currentMinutes / 60
                 val min = currentMinutes % 60
                 val ampm = if (hour >= 12) "PM" else "AM"
                 val displayHour = if (hour % 12 == 0) 12 else hour % 12
-                
-                rowView.findViewById<TextView>(R.id.tv_grid_time_label).text = String.format("%d:%02d %s", displayHour, min, ampm)
+
+                rowView.findViewById<TextView>(R.id.tv_grid_time_label).text =
+                    String.format("%d:%02d %s", displayHour, min, ampm)
                 gridContainer.addView(rowView)
                 currentMinutes += 30
             }
@@ -405,17 +631,27 @@ class MainActivity : AppCompatActivity() {
             daySchedules.forEach { schedule ->
                 val startTimeStr = schedule.startTime ?: ""
                 val endTimeStr = schedule.endTime ?: ""
-                
+
                 if (startTimeStr.isNotEmpty() && endTimeStr.isNotEmpty()) {
                     val startMin = timeToMinutes(startTimeStr)
                     val endMin = timeToMinutes(endTimeStr)
-                    
+
                     val title = schedule.courseTitle ?: "No Title"
-                    val range = "${formatTime(startTimeStr)} - ${formatTime(endTimeStr)} | ${schedule.sectionName ?: "N/A"}"
+                    val range =
+                        "${formatTime(startTimeStr)} - ${formatTime(endTimeStr)} | ${schedule.sectionName ?: "N/A"}"
                     val roomName = "Room: ${schedule.roomName ?: "N/A"}"
                     val color = schedule.courseColor ?: "#888888"
-                    
-                    addGridScheduleItem(cardsContainer, gridContainer, startMin, endMin, title, range, roomName, color)
+
+                    addGridScheduleItem(
+                        cardsContainer,
+                        gridContainer,
+                        startMin,
+                        endMin,
+                        title,
+                        range,
+                        roomName,
+                        color
+                    )
                 }
             }
         }
@@ -430,33 +666,51 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun addGridScheduleItem(cardsContainer: FrameLayout, gridContainer: LinearLayout, startMin: Int, endMin: Int, title: String, range: String, room: String, color: String) {
-        val cardView = LayoutInflater.from(this).inflate(R.layout.item_schedule_card, cardsContainer, false)
-        
+    private fun addGridScheduleItem(
+        cardsContainer: FrameLayout,
+        gridContainer: LinearLayout,
+        startMin: Int,
+        endMin: Int,
+        title: String,
+        range: String,
+        room: String,
+        color: String
+    ) {
+        val cardView =
+            LayoutInflater.from(this).inflate(R.layout.item_schedule_card, cardsContainer, false)
+
         cardView.findViewById<TextView>(R.id.tv_schedule_title).text = title
         cardView.findViewById<TextView>(R.id.tv_schedule_time_range).text = range
         cardView.findViewById<TextView>(R.id.tv_schedule_room).text = room
-        
+
         val mainColor = Color.parseColor(color)
         val indicator = cardView.findViewById<View>(R.id.view_schedule_indicator)
-        val indicatorDrawable = ResourcesCompat.getDrawable(resources, R.drawable.bg_indicator_bar, theme) as GradientDrawable
+        val indicatorDrawable = ResourcesCompat.getDrawable(
+            resources,
+            R.drawable.bg_indicator_bar,
+            theme
+        ) as GradientDrawable
         indicatorDrawable.setColor(mainColor)
         indicator.background = indicatorDrawable
-        
+
         val lightColor = lightenColor(color, 0.85f)
         val contentBg = cardView.findViewById<LinearLayout>(R.id.ll_schedule_card_content)
-        val contentDrawable = ResourcesCompat.getDrawable(resources, R.drawable.bg_schedule_card_round, theme) as GradientDrawable
+        val contentDrawable = ResourcesCompat.getDrawable(
+            resources,
+            R.drawable.bg_schedule_card_round,
+            theme
+        ) as GradientDrawable
         contentDrawable.setColor(Color.parseColor(lightColor))
         contentBg.background = contentDrawable
-        
-        // Match reference: each 30min row is 40dp. 
+
+        // Match reference: each 30min row is 40dp.
         val rowHeightDp = 40f
         val startFromGridMin = 450 // 7:30 AM
-        
+
         // Each 30 mins = 40dp. 1 min = 40/30 dp.
         val topMarginDp = (startMin - startFromGridMin) * (rowHeightDp / 30f)
         val heightDp = (endMin - startMin) * (rowHeightDp / 30f)
-        
+
         val params = FrameLayout.LayoutParams(
             FrameLayout.LayoutParams.MATCH_PARENT,
             heightDp.toInt().dpToPx()
@@ -464,7 +718,7 @@ class MainActivity : AppCompatActivity() {
         // Adjusting topMargin to align perfectly with the horizontal lines
         params.topMargin = (topMarginDp + 20f).toInt().dpToPx()
         params.marginEnd = 8.dpToPx()
-        
+
         cardView.layoutParams = params
         cardsContainer.addView(cardView)
     }
@@ -515,23 +769,31 @@ class MainActivity : AppCompatActivity() {
                     container.addView(tvEmpty)
                 } else {
                     facultyList.forEach { faculty ->
-                        val card = LayoutInflater.from(this@MainActivity).inflate(R.layout.item_faculty_card, container, false)
-                        
-                        card.findViewById<TextView>(R.id.tv_faculty_name).text = "${faculty.first_name ?: ""} ${faculty.last_name ?: ""}"
-                        card.findViewById<TextView>(R.id.tv_faculty_units).text = faculty.total_units.toString()
-                        
-                        val empStatus = when(faculty.employment_status?.lowercase()) {
+                        val card = LayoutInflater.from(this@MainActivity)
+                            .inflate(R.layout.item_faculty_card, container, false)
+
+                        card.findViewById<TextView>(R.id.tv_faculty_name).text =
+                            "${faculty.first_name ?: ""} ${faculty.last_name ?: ""}"
+                        card.findViewById<TextView>(R.id.tv_faculty_units).text =
+                            faculty.total_units.toString()
+
+                        val empStatus = when (faculty.employment_status?.lowercase()) {
                             "full_time" -> "Full-Time"
                             "part_time" -> "Part-Time"
                             "contractual" -> "Contractual"
                             else -> "Full-time"
                         }
                         card.findViewById<TextView>(R.id.tv_faculty_type).text = empStatus
-                        card.findViewById<TextView>(R.id.tv_faculty_degree).text = faculty.highest_degree ?: "Masters"
+                        card.findViewById<TextView>(R.id.tv_faculty_degree).text =
+                            faculty.highest_degree ?: "Masters"
                         card.findViewById<TextView>(R.id.tv_faculty_license).text = "Yes"
 
                         card.findViewById<TextView>(R.id.btn_view_schedule).setOnClickListener {
-                            showCommonScheduleDialog("${faculty.first_name}'s Schedule", faculty.id, "faculty")
+                            showCommonScheduleDialog(
+                                "${faculty.first_name}'s Schedule",
+                                faculty.id,
+                                "faculty"
+                            )
                         }
 
                         container.addView(card)
@@ -539,7 +801,10 @@ class MainActivity : AppCompatActivity() {
                 }
             } catch (e: Exception) {
                 Log.e("MainActivity", "Failed to load faculty into schedule", e)
-                if (e is HttpException && e.code() == 401) handleSessionFailure("Unauthorized", true)
+                if (e is HttpException && e.code() == 401) handleSessionFailure(
+                    "Unauthorized",
+                    true
+                )
             }
         }
     }
@@ -549,7 +814,7 @@ class MainActivity : AppCompatActivity() {
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
         dialog.setContentView(R.layout.dialog_faculty_schedule)
         dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-        
+
         val height = (resources.displayMetrics.heightPixels * 0.90).toInt()
         dialog.window?.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, height)
         dialog.window?.setGravity(Gravity.BOTTOM)
@@ -563,10 +828,10 @@ class MainActivity : AppCompatActivity() {
         val btnPrint = dialog.findViewById<FrameLayout>(R.id.btn_print)
         val btnDownloadPdf = dialog.findViewById<FrameLayout>(R.id.btn_download_pdf)
 
-        btnPrint.setOnClickListener { 
+        btnPrint.setOnClickListener {
             printResourceSchedule(resourceId, type)
         }
-        btnDownloadPdf.setOnClickListener { 
+        btnDownloadPdf.setOnClickListener {
             printResourceSchedule(resourceId, type)
         }
 
@@ -582,31 +847,42 @@ class MainActivity : AppCompatActivity() {
         lifecycleScope.launch {
             try {
                 // Determine which API to call based on type
-                val scheduleResponse = when(type) {
+                val scheduleResponse = when (type) {
                     "faculty" -> RetrofitClient.apiService.getFacultySchedule(resourceId)
                     "section" -> RetrofitClient.apiService.getSectionSchedule(resourceId)
                     "room" -> RetrofitClient.apiService.getRoomSchedule(resourceId)
                     else -> ScheduleListResponse(emptyList())
                 }
-                
+
                 val schedules = scheduleResponse.schedules ?: emptyList()
 
                 days.forEachIndexed { index, dayName ->
-                    val dayView = LayoutInflater.from(this@MainActivity).inflate(R.layout.item_day_schedule_card, daysContainer, false)
+                    val dayView = LayoutInflater.from(this@MainActivity)
+                        .inflate(R.layout.item_day_schedule_card, daysContainer, false)
                     dayView.findViewById<TextView>(R.id.tv_day_name).text = dayName
-                    
+
                     val dotsContainer = dayView.findViewById<LinearLayout>(R.id.ll_dots_container)
-                    val daySchedules = schedules.filter { getDayStringFromInt(it.day).equals(fullDays[index], ignoreCase = true) }
-                    
+                    val daySchedules = schedules.filter {
+                        getDayStringFromInt(it.day).equals(
+                            fullDays[index],
+                            ignoreCase = true
+                        )
+                    }
+
                     daySchedules.forEach { schedule ->
                         val dot = View(this@MainActivity).apply {
                             layoutParams = LinearLayout.LayoutParams(
                                 (6 * resources.displayMetrics.density).toInt(),
                                 (6 * resources.displayMetrics.density).toInt()
                             ).apply { setMargins(1, 1, 1, 1) }
-                            background = ResourcesCompat.getDrawable(resources, R.drawable.bg_circle_generic, theme)
+                            background = ResourcesCompat.getDrawable(
+                                resources,
+                                R.drawable.bg_circle_generic,
+                                theme
+                            )
                             val colorStr = schedule.courseColor ?: "#888888"
-                            backgroundTintList = android.content.res.ColorStateList.valueOf(Color.parseColor(colorStr))
+                            backgroundTintList =
+                                android.content.res.ColorStateList.valueOf(Color.parseColor(colorStr))
                         }
                         dotsContainer.addView(dot)
                     }
@@ -616,25 +892,40 @@ class MainActivity : AppCompatActivity() {
                             daysContainer.getChildAt(i).isSelected = false
                         }
                         dayView.isSelected = true
-                        displayCommonScheduleForDay(daySchedules, gridContainer, cardsContainer, noScheduleState, timetableContainer)
+                        displayCommonScheduleForDay(
+                            daySchedules,
+                            gridContainer,
+                            cardsContainer,
+                            noScheduleState,
+                            timetableContainer
+                        )
                     }
                     daysContainer.addView(dayView)
                 }
-                
+
                 if (daysContainer.childCount > 0) {
                     daysContainer.getChildAt(0).performClick()
                 }
 
             } catch (e: Exception) {
                 Log.e("MainActivity", "Failed to load schedule for dialog", e)
-                if (e is HttpException && e.code() == 401) handleSessionFailure("Unauthorized", true)
+                if (e is HttpException && e.code() == 401) handleSessionFailure(
+                    "Unauthorized",
+                    true
+                )
             }
         }
 
         dialog.show()
     }
 
-    private fun displayCommonScheduleForDay(daySchedules: List<ScheduleItemResponse>, gridContainer: LinearLayout, cardsContainer: FrameLayout, noState: View, timetable: View) {
+    private fun displayCommonScheduleForDay(
+        daySchedules: List<ScheduleItemResponse>,
+        gridContainer: LinearLayout,
+        cardsContainer: FrameLayout,
+        noState: View,
+        timetable: View
+    ) {
         gridContainer.removeAllViews()
         cardsContainer.removeAllViews()
 
@@ -644,18 +935,20 @@ class MainActivity : AppCompatActivity() {
         } else {
             noState.visibility = View.GONE
             timetable.visibility = View.VISIBLE
-            
+
             var currentMinutes = 450 // 7:30 AM
             val endMinutes = 1290 // 9:30 PM
-            
+
             while (currentMinutes <= endMinutes) {
-                val rowView = LayoutInflater.from(this).inflate(R.layout.item_timetable_grid_row, gridContainer, false)
+                val rowView = LayoutInflater.from(this)
+                    .inflate(R.layout.item_timetable_grid_row, gridContainer, false)
                 val hour = currentMinutes / 60
                 val min = currentMinutes % 60
                 val ampm = if (hour >= 12) "PM" else "AM"
                 val displayHour = if (hour % 12 == 0) 12 else hour % 12
-                
-                rowView.findViewById<TextView>(R.id.tv_grid_time_label).text = String.format("%d:%02d %s", displayHour, min, ampm)
+
+                rowView.findViewById<TextView>(R.id.tv_grid_time_label).text =
+                    String.format("%d:%02d %s", displayHour, min, ampm)
                 gridContainer.addView(rowView)
                 currentMinutes += 30
             }
@@ -663,17 +956,27 @@ class MainActivity : AppCompatActivity() {
             daySchedules.forEach { schedule ->
                 val startTimeStr = schedule.startTime ?: ""
                 val endTimeStr = schedule.endTime ?: ""
-                
+
                 if (startTimeStr.isNotEmpty() && endTimeStr.isNotEmpty()) {
                     val startMin = timeToMinutes(startTimeStr)
                     val endMin = timeToMinutes(endTimeStr)
-                    
+
                     val title = schedule.courseTitle ?: "No Title"
-                    val range = "${formatTime(startTimeStr)} - ${formatTime(endTimeStr)} | ${schedule.sectionName ?: "N/A"}"
+                    val range =
+                        "${formatTime(startTimeStr)} - ${formatTime(endTimeStr)} | ${schedule.sectionName ?: "N/A"}"
                     val roomName = "Room: ${schedule.roomName ?: "N/A"}"
                     val color = schedule.courseColor ?: "#888888"
-                    
-                    addGridScheduleItem(cardsContainer, gridContainer, startMin, endMin, title, range, roomName, color)
+
+                    addGridScheduleItem(
+                        cardsContainer,
+                        gridContainer,
+                        startMin,
+                        endMin,
+                        title,
+                        range,
+                        roomName,
+                        color
+                    )
                 }
             }
         }
@@ -682,13 +985,13 @@ class MainActivity : AppCompatActivity() {
     private fun printResourceSchedule(resourceId: Int, type: String) {
         lifecycleScope.launch {
             try {
-                val responseBody = when(type) {
+                val responseBody = when (type) {
                     "faculty" -> RetrofitClient.apiService.getFacultyScheduleHtml(resourceId)
                     "section" -> RetrofitClient.apiService.getSectionScheduleHtml(resourceId)
                     "room" -> RetrofitClient.apiService.getRoomScheduleHtml(resourceId)
                     else -> throw Exception("Unknown type")
                 }
-                
+
                 val htmlContent = responseBody.string()
                 runOnUiThread {
                     doPrint(htmlContent)
@@ -699,7 +1002,11 @@ class MainActivity : AppCompatActivity() {
                     handleSessionFailure("Unauthorized", true)
                 } else {
                     runOnUiThread {
-                        Toast.makeText(this@MainActivity, "Print Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            this@MainActivity,
+                            "Print Error: ${e.message}",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 }
             }
@@ -724,11 +1031,12 @@ class MainActivity : AppCompatActivity() {
                     container.addView(tvEmpty)
                 } else {
                     sectionList.forEach { section ->
-                        val card = LayoutInflater.from(this@MainActivity).inflate(R.layout.item_section_card, container, false)
-                        
+                        val card = LayoutInflater.from(this@MainActivity)
+                            .inflate(R.layout.item_section_card, container, false)
+
                         card.findViewById<TextView>(R.id.tv_section_name).text = section.name
-                        
-                        val yearStr = when(section.year_level) {
+
+                        val yearStr = when (section.year_level) {
                             1 -> "1st Year"
                             2 -> "2nd Year"
                             3 -> "3rd Year"
@@ -736,21 +1044,27 @@ class MainActivity : AppCompatActivity() {
                             else -> "${section.year_level}th Year"
                         }
                         card.findViewById<TextView>(R.id.tv_year_level).text = yearStr
-                        
-                        val semStr = when(section.semester) {
+
+                        val semStr = when (section.semester) {
                             1 -> "1st Sem"
                             2 -> "2nd Sem"
                             else -> "${section.semester}th Sem"
                         }
                         card.findViewById<TextView>(R.id.tv_semester).text = semStr
-                        
-                        card.findViewById<TextView>(R.id.tv_section_id).text = section.name.takeLast(2)
-                        
-                        val curriculumName = curriculums.find { it.id == section.curriculum }?.name ?: "BSCpE"
+
+                        card.findViewById<TextView>(R.id.tv_section_id).text =
+                            section.name.takeLast(2)
+
+                        val curriculumName =
+                            curriculums.find { it.id == section.curriculum }?.name ?: "BSCpE"
                         card.findViewById<TextView>(R.id.tv_curriculum).text = curriculumName
 
                         card.findViewById<TextView>(R.id.btn_view_schedule).setOnClickListener {
-                            showCommonScheduleDialog("${section.name}'s Schedule", section.id, "section")
+                            showCommonScheduleDialog(
+                                "${section.name}'s Schedule",
+                                section.id,
+                                "section"
+                            )
                         }
 
                         container.addView(card)
@@ -758,7 +1072,10 @@ class MainActivity : AppCompatActivity() {
                 }
             } catch (e: Exception) {
                 Log.e("MainActivity", "Failed to load sections into schedule", e)
-                if (e is HttpException && e.code() == 401) handleSessionFailure("Unauthorized", true)
+                if (e is HttpException && e.code() == 401) handleSessionFailure(
+                    "Unauthorized",
+                    true
+                )
             }
         }
     }
@@ -781,13 +1098,16 @@ class MainActivity : AppCompatActivity() {
                     container.addView(tvEmpty)
                 } else {
                     roomList.forEach { room ->
-                        val card = LayoutInflater.from(this@MainActivity).inflate(R.layout.item_room_card, container, false)
-                        
+                        val card = LayoutInflater.from(this@MainActivity)
+                            .inflate(R.layout.item_room_card, container, false)
+
                         card.findViewById<TextView>(R.id.tv_room_name).text = room.name
                         card.findViewById<TextView>(R.id.tv_room_type).text = room.roomType
-                        card.findViewById<TextView>(R.id.tv_room_capacity).text = room.capacity.toString()
+                        card.findViewById<TextView>(R.id.tv_room_capacity).text =
+                            room.capacity.toString()
                         card.findViewById<TextView>(R.id.tv_room_campus).text = room.campus
-                        card.findViewById<TextView>(R.id.tv_room_number).text = room.roomNumber ?: room.name
+                        card.findViewById<TextView>(R.id.tv_room_number).text =
+                            room.roomNumber ?: room.name
 
                         card.findViewById<TextView>(R.id.btn_view_schedule).setOnClickListener {
                             showCommonScheduleDialog("${room.name}'s Schedule", room.id, "room")
@@ -798,7 +1118,10 @@ class MainActivity : AppCompatActivity() {
                 }
             } catch (e: Exception) {
                 Log.e("MainActivity", "Failed to load rooms into schedule", e)
-                if (e is HttpException && e.code() == 401) handleSessionFailure("Unauthorized", true)
+                if (e is HttpException && e.code() == 401) handleSessionFailure(
+                    "Unauthorized",
+                    true
+                )
             }
         }
     }
@@ -829,18 +1152,20 @@ class MainActivity : AppCompatActivity() {
         lifecycleScope.launch {
             try {
                 val data = RetrofitClient.apiService.getUserFacultyData()
-                
+
                 var finalData = data
                 if (finalData.id <= 0) {
                     val facultyList = RetrofitClient.apiService.getFacultyList()
-                    val matchingFaculty = facultyList.find { it.email?.trim()?.equals(finalData.email.trim(), ignoreCase = true) == true }
+                    val matchingFaculty = facultyList.find {
+                        it.email?.trim()?.equals(finalData.email.trim(), ignoreCase = true) == true
+                    }
                     if (matchingFaculty != null) {
                         finalData = finalData.copy(id = matchingFaculty.id)
                     }
                 }
-                
+
                 currentUserFaculty = finalData
-                
+
                 // Update UI Based on Role
                 updateDashboardUIForRole()
 
@@ -850,38 +1175,46 @@ class MainActivity : AppCompatActivity() {
                     "Hello!"
                 }
                 binding.tvGreeting.text = greeting
-                
+
                 // Update profile UI with data (Admin)
-                binding.layoutProfile.tvProfileName.text = "${finalData.first_name} ${finalData.last_name}"
+                binding.layoutProfile.tvProfileName.text =
+                    "${finalData.first_name} ${finalData.last_name}"
                 binding.layoutProfile.tvProfileEmailSub.text = finalData.email
                 binding.layoutProfile.etFirstName.setText(finalData.first_name)
                 binding.layoutProfile.etLastName.setText(finalData.last_name)
                 binding.layoutProfile.etEmail.setText(finalData.email)
-                
+
                 // Update profile UI with data (Staff)
-                binding.layoutStaffProfile.tvStaffProfileName.text = "${finalData.first_name} ${finalData.last_name}"
+                binding.layoutStaffProfile.tvStaffProfileName.text =
+                    "${finalData.first_name} ${finalData.last_name}"
                 binding.layoutStaffProfile.tvStaffProfileEmailSub.text = finalData.email
                 binding.layoutStaffProfile.etStaffFirstName.setText(finalData.first_name)
                 binding.layoutStaffProfile.etStaffLastName.setText(finalData.last_name)
                 binding.layoutStaffProfile.etStaffEmail.setText(finalData.email)
-                
+
                 // Gender Spinners
-                val genderIndex = if (finalData.gender?.equals("F", ignoreCase = true) == true || finalData.gender?.equals("Female", ignoreCase = true) == true) 1 else 0
+                val genderIndex = if (finalData.gender?.equals(
+                        "F",
+                        ignoreCase = true
+                    ) == true || finalData.gender?.equals("Female", ignoreCase = true) == true
+                ) 1 else 0
                 binding.layoutProfile.spinnerGender.setSelection(genderIndex)
                 binding.layoutStaffProfile.spinnerStaffGender.setSelection(genderIndex)
 
                 // Employment Status Spinners
                 val employmentOptions = listOf("Full-Time", "Part-Time", "Contractual")
-                val empValue = when(finalData.employment_status?.lowercase()) {
+                val empValue = when (finalData.employment_status?.lowercase()) {
                     "full_time" -> "Full-Time"
                     "part_time" -> "Part-Time"
                     "contractual" -> "Contractual"
                     else -> "Full-Time"
                 }
-                val empIndex = employmentOptions.indexOfFirst { it.equals(empValue, ignoreCase = true) }.let { if (it == -1) 0 else it }
+                val empIndex =
+                    employmentOptions.indexOfFirst { it.equals(empValue, ignoreCase = true) }
+                        .let { if (it == -1) 0 else it }
                 binding.layoutProfile.spinnerEmploymentStatus.setSelection(empIndex)
                 binding.layoutStaffProfile.spinnerStaffEmploymentStatus.setSelection(empIndex)
-                
+
                 // Degree Spinners
                 val degIndex = when {
                     finalData.highest_degree?.contains("Master", ignoreCase = true) == true -> 0
@@ -890,9 +1223,10 @@ class MainActivity : AppCompatActivity() {
                 }
                 binding.layoutProfile.spinnerDegree.setSelection(degIndex)
                 binding.layoutStaffProfile.spinnerStaffDegree.setSelection(degIndex)
-                
+
                 // PRC License check mapping
-                val isQualified = finalData.prc_licensed?.trim()?.equals("Yes", ignoreCase = true) == true
+                val isQualified =
+                    finalData.prc_licensed?.trim()?.equals("Yes", ignoreCase = true) == true
                 binding.layoutProfile.cbQualified.isChecked = isQualified
                 binding.layoutProfile.cbNa.isChecked = !isQualified
                 binding.layoutStaffProfile.cbStaffQualified.isChecked = isQualified
@@ -918,21 +1252,22 @@ class MainActivity : AppCompatActivity() {
     private fun updateDashboardUIForRole() {
         val email = currentUserFaculty?.email?.lowercase()?.trim() ?: ""
         val isStaff = email == "mpmariano@tip.edu.ph"
-        
+
         if (isStaff) {
             binding.llStaffDashboardContent.root.visibility = View.VISIBLE
             binding.staffNavInclude.root.visibility = View.VISIBLE
             binding.llAdminDashboardContent.visibility = View.GONE
             binding.bottomNavContainer.visibility = View.GONE
             binding.navCourse.visibility = View.GONE
-            
+
             val staffGreeting = findViewById<TextView>(R.id.tv_staff_greeting)
-            staffGreeting?.text = "Hello, ${currentUserFaculty?.first_name} ${currentUserFaculty?.last_name}!"
-            
+            staffGreeting?.text =
+                "Hello, ${currentUserFaculty?.first_name} ${currentUserFaculty?.last_name}!"
+
             findViewById<Button>(R.id.btn_view_my_schedule_promo)?.setOnClickListener {
                 updateNavUI("schedule")
             }
-            
+
             startStaffCarousel()
         } else {
             binding.llStaffDashboardContent.root.visibility = View.GONE
@@ -940,7 +1275,7 @@ class MainActivity : AppCompatActivity() {
             binding.llAdminDashboardContent.visibility = View.VISIBLE
             binding.bottomNavContainer.visibility = View.VISIBLE
             binding.navCourse.visibility = View.VISIBLE
-            
+
             stopStaffCarousel()
         }
     }
@@ -960,13 +1295,13 @@ class MainActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.tv_staff_feature_title)?.text = feature.first
         findViewById<TextView>(R.id.tv_staff_feature_desc)?.text = feature.second
         findViewById<ImageView>(R.id.iv_staff_feature_logo)?.setImageResource(feature.third)
-        
+
         val indicators = findViewById<LinearLayout>(R.id.ll_carousel_indicators)
         indicators?.let {
             for (i in 0 until it.childCount) {
-                it.getChildAt(i).backgroundTintList = if (i == currentCarouselIndex) 
+                it.getChildAt(i).backgroundTintList = if (i == currentCarouselIndex)
                     android.content.res.ColorStateList.valueOf(Color.parseColor("#1E2124"))
-                    else android.content.res.ColorStateList.valueOf(Color.parseColor("#D1D5DB"))
+                else android.content.res.ColorStateList.valueOf(Color.parseColor("#D1D5DB"))
             }
         }
     }
@@ -977,26 +1312,31 @@ class MainActivity : AppCompatActivity() {
                 // Fetch all courses
                 val allCourses = RetrofitClient.apiService.getCourses(null, null, null)
                 allCourseOptions.clear()
-                allCourseOptions.addAll(allCourses.distinctBy { it.descriptive_title }.sortedBy { it.descriptive_title })
-                
+                allCourseOptions.addAll(allCourses.distinctBy { it.descriptive_title }
+                    .sortedBy { it.descriptive_title })
+
                 // Initialize selected IDs from user data
                 selectedSpecIds.clear()
                 val userSpecs = currentUserFaculty?.specialization ?: emptyList()
                 allCourseOptions.forEach { course ->
                     // Match by descriptive_title, course_code, or ID (as string)
-                    if (userSpecs.any { 
-                            it.trim().equals(course.descriptive_title.trim(), ignoreCase = true) || 
-                            it.trim().equals(course.course_code.trim(), ignoreCase = true) ||
-                            it.trim() == course.id.toString()
+                    if (userSpecs.any {
+                            it.trim().equals(course.descriptive_title.trim(), ignoreCase = true) ||
+                                    it.trim()
+                                        .equals(course.course_code.trim(), ignoreCase = true) ||
+                                    it.trim() == course.id.toString()
                         }) {
                         selectedSpecIds.add(course.id)
                     }
                 }
-                
+
                 updateMultiSelectSpinner()
             } catch (e: Exception) {
                 Log.e("MainActivity", "Failed to load specialization options", e)
-                if (e is HttpException && e.code() == 401) handleSessionFailure("Unauthorized", true)
+                if (e is HttpException && e.code() == 401) handleSessionFailure(
+                    "Unauthorized",
+                    true
+                )
             }
         }
     }
@@ -1008,21 +1348,26 @@ class MainActivity : AppCompatActivity() {
             selectedItems.size == 1 -> selectedItems[0].course_code
             else -> "${selectedItems[0].course_code} (+${selectedItems.size - 1})"
         }
-        
-        val adapter = ArrayAdapter(this, R.layout.item_spinner_selected, android.R.id.text1, listOf(displayText))
+
+        val adapter = ArrayAdapter(
+            this,
+            R.layout.item_spinner_selected,
+            android.R.id.text1,
+            listOf(displayText)
+        )
         adapter.setDropDownViewResource(R.layout.item_spinner_dropdown)
-        
+
         // Update both spinners
         binding.layoutProfile.spinnerSpecialization.adapter = adapter
         binding.layoutStaffProfile.spinnerStaffSpecialization.adapter = adapter
-        
+
         val touchListener = View.OnTouchListener { _, event ->
             if (event.action == android.view.MotionEvent.ACTION_UP) {
                 showCustomMultiSelectDialog()
             }
             true
         }
-        
+
         binding.layoutProfile.spinnerSpecialization.setOnTouchListener(touchListener)
         binding.layoutStaffProfile.spinnerStaffSpecialization.setOnTouchListener(touchListener)
     }
@@ -1032,7 +1377,7 @@ class MainActivity : AppCompatActivity() {
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
         dialog.setContentView(R.layout.dialog_multi_select)
         dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-        
+
         val height = (resources.displayMetrics.heightPixels * 0.70).toInt()
         dialog.window?.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, height)
         dialog.window?.setGravity(Gravity.BOTTOM)
@@ -1044,7 +1389,8 @@ class MainActivity : AppCompatActivity() {
         val tempSelectedIds = selectedSpecIds.toMutableSet()
 
         allCourseOptions.forEach { course ->
-            val itemView = LayoutInflater.from(this).inflate(R.layout.item_multi_select_option, container, false)
+            val itemView = LayoutInflater.from(this)
+                .inflate(R.layout.item_multi_select_option, container, false)
             val checkbox = itemView.findViewById<CheckBox>(R.id.checkbox_option)
             val tvCode = itemView.findViewById<TextView>(R.id.tv_option_code)
             val tvTitle = itemView.findViewById<TextView>(R.id.tv_option_title)
@@ -1066,7 +1412,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         dialog.findViewById<ImageView>(R.id.btn_close).setOnClickListener { dialog.dismiss() }
-        
+
         dialog.findViewById<Button>(R.id.btn_done).setOnClickListener {
             selectedSpecIds.clear()
             selectedSpecIds.addAll(tempSelectedIds)
@@ -1105,10 +1451,10 @@ class MainActivity : AppCompatActivity() {
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
         dialog.setContentView(R.layout.dialog_dashboard_list)
         dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-        
+
         val tvTitle = dialog.findViewById<TextView>(R.id.tv_dialog_title)
         tvTitle.text = "Staff"
-        
+
         val btnClose = dialog.findViewById<ImageView>(R.id.btn_close)
         btnClose.setOnClickListener { dialog.dismiss() }
 
@@ -1125,7 +1471,7 @@ class MainActivity : AppCompatActivity() {
         container.addView(tvStatus)
 
         dialog.show()
-        
+
         val height = (resources.displayMetrics.heightPixels * 0.60).toInt()
         dialog.window?.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, height)
         dialog.window?.setGravity(Gravity.BOTTOM)
@@ -1134,13 +1480,14 @@ class MainActivity : AppCompatActivity() {
             try {
                 val facultyList = RetrofitClient.apiService.getFacultyList()
                 container.removeAllViews()
-                
+
                 if (facultyList.isEmpty()) {
                     tvStatus.text = "No staff members found in database."
                     container.addView(tvStatus)
                 } else {
                     facultyList.forEach { faculty ->
-                        val itemView = LayoutInflater.from(this@MainActivity).inflate(R.layout.item_dashboard_list, container, false)
+                        val itemView = LayoutInflater.from(this@MainActivity)
+                            .inflate(R.layout.item_dashboard_list, container, false)
                         itemView.findViewById<TextView>(R.id.tv_item_name).apply {
                             text = "${faculty.first_name ?: ""} ${faculty.last_name ?: ""}"
                             setTextColor(Color.BLACK)
@@ -1158,7 +1505,10 @@ class MainActivity : AppCompatActivity() {
                 container.removeAllViews()
                 tvStatus.text = "Error loading list"
                 container.addView(tvStatus)
-                if (e is HttpException && e.code() == 401) handleSessionFailure("Unauthorized", true)
+                if (e is HttpException && e.code() == 401) handleSessionFailure(
+                    "Unauthorized",
+                    true
+                )
             }
         }
     }
@@ -1167,8 +1517,8 @@ class MainActivity : AppCompatActivity() {
         val dialog = Dialog(this)
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
         dialog.setContentView(R.layout.dialog_dashboard_list)
-        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT) )
-        
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+
         val tvTitle = dialog.findViewById<TextView>(R.id.tv_dialog_title)
         tvTitle.text = "Sections"
 
@@ -1189,22 +1539,24 @@ class MainActivity : AppCompatActivity() {
             container.addView(tvEmpty)
         } else {
             sections.forEach { section ->
-                val itemView = LayoutInflater.from(this).inflate(R.layout.item_dashboard_list, container, false)
+                val itemView = LayoutInflater.from(this)
+                    .inflate(R.layout.item_dashboard_list, container, false)
                 itemView.findViewById<TextView>(R.id.tv_item_name).apply {
                     text = section.name
                     setTextColor(Color.BLACK)
                     visibility = View.VISIBLE
                 }
                 itemView.findViewById<TextView>(R.id.tv_item_sub).visibility = View.GONE
-                
+
                 val badge = itemView.findViewById<TextView>(R.id.tv_status_badge)
                 badge.visibility = View.VISIBLE
-                
+
                 when (section.status.lowercase()) {
                     "complete" -> {
                         badge.text = "Complete Schedule"
                         badge.setBackgroundResource(R.drawable.bg_status_badge_green)
                     }
+
                     else -> {
                         badge.text = "No Schedule Yet"
                         badge.setBackgroundResource(R.drawable.bg_status_badge_red)
@@ -1213,9 +1565,9 @@ class MainActivity : AppCompatActivity() {
                 container.addView(itemView)
             }
         }
-        
+
         dialog.show()
-        
+
         val height = (resources.displayMetrics.heightPixels * 0.60).toInt()
         dialog.window?.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, height)
         dialog.window?.setGravity(Gravity.BOTTOM)
@@ -1224,34 +1576,43 @@ class MainActivity : AppCompatActivity() {
     private fun updateCurriculumSpinner() {
         val curriculumNames = mutableListOf("Select Curriculum")
         curriculumNames.addAll(curriculums.map { "${it.name} (${it.year})" })
-        
-        val adapter = ArrayAdapter(this, R.layout.item_spinner_selected, android.R.id.text1, curriculumNames)
+
+        val adapter =
+            ArrayAdapter(this, R.layout.item_spinner_selected, android.R.id.text1, curriculumNames)
         adapter.setDropDownViewResource(R.layout.item_spinner_dropdown)
         binding.layoutCourse.spinnerCurriculum.adapter = adapter
 
-        binding.layoutCourse.spinnerCurriculum.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                if (position == 0) {
-                    selectedCurriculumId = null
-                    selectedYearLevel = null
-                    selectedSemester = null
-                    resetAcademicLevelSpinner()
-                    loadCourses()
-                } else {
-                    selectedCurriculumId = curriculums[position - 1].id
-                    selectedYearLevel = null
-                    selectedSemester = null
-                    loadCoursesAndPopulateLevels()
+        binding.layoutCourse.spinnerCurriculum.onItemSelectedListener =
+            object : AdapterView.OnItemSelectedListener {
+                override fun onItemSelected(
+                    parent: AdapterView<*>?,
+                    view: View?,
+                    position: Int,
+                    id: Long
+                ) {
+                    if (position == 0) {
+                        selectedCurriculumId = null
+                        selectedYearLevel = null
+                        selectedSemester = null
+                        resetAcademicLevelSpinner()
+                        loadCourses()
+                    } else {
+                        selectedCurriculumId = curriculums[position - 1].id
+                        selectedYearLevel = null
+                        selectedSemester = null
+                        loadCoursesAndPopulateLevels()
+                    }
                 }
+
+                override fun onNothingSelected(parent: AdapterView<*>?) {}
             }
-            override fun onNothingSelected(parent: AdapterView<*>?) {}
-        }
     }
 
     private fun resetAcademicLevelSpinner() {
         availableLevels.clear()
         val levels = listOf("All Year Levels")
-        val levelAdapter = ArrayAdapter(this, R.layout.item_spinner_selected, android.R.id.text1, levels)
+        val levelAdapter =
+            ArrayAdapter(this, R.layout.item_spinner_selected, android.R.id.text1, levels)
         levelAdapter.setDropDownViewResource(R.layout.item_spinner_dropdown)
         binding.layoutCourse.spinnerAcademicLevel.adapter = levelAdapter
     }
@@ -1259,50 +1620,67 @@ class MainActivity : AppCompatActivity() {
     private fun loadCoursesAndPopulateLevels() {
         lifecycleScope.launch {
             try {
-                val allCourses = RetrofitClient.apiService.getCourses(selectedCurriculumId, null, null)
+                val allCourses =
+                    RetrofitClient.apiService.getCourses(selectedCurriculumId, null, null)
                 courses = allCourses
-                
-                availableLevels = allCourses.map { Pair(it.year_level, it.semester) }.distinct().sortedWith(compareBy({ it.first }, { it.second })).toMutableList()
-                
+
+                availableLevels = allCourses.map { Pair(it.year_level, it.semester) }.distinct()
+                    .sortedWith(compareBy({ it.first }, { it.second })).toMutableList()
+
                 val levelNames = mutableListOf("All Year Levels")
                 availableLevels.forEach { (year, sem) ->
-                    val yearStr = when(year) {
+                    val yearStr = when (year) {
                         1 -> "1st"
                         2 -> "2nd"
                         3 -> "3rd"
                         4 -> "4th"
                         else -> "${year}th"
                     }
-                    val semStr = when(sem) {
+                    val semStr = when (sem) {
                         1 -> "1st"
                         2 -> "2nd"
                         else -> "${sem}th"
                     }
                     levelNames.add("$yearStr Year, $semStr Sem")
                 }
-                
-                val levelAdapter = ArrayAdapter(this@MainActivity, R.layout.item_spinner_selected, android.R.id.text1, levelNames)
+
+                val levelAdapter = ArrayAdapter(
+                    this@MainActivity,
+                    R.layout.item_spinner_selected,
+                    android.R.id.text1,
+                    levelNames
+                )
                 levelAdapter.setDropDownViewResource(R.layout.item_spinner_dropdown)
                 binding.layoutCourse.spinnerAcademicLevel.adapter = levelAdapter
 
-                binding.layoutCourse.spinnerAcademicLevel.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-                    override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                        if (position == 0) {
-                            selectedYearLevel = null
-                            selectedSemester = null
-                        } else {
-                            val (year, sem) = availableLevels[position - 1]
-                            selectedYearLevel = year
-                            selectedSemester = sem
+                binding.layoutCourse.spinnerAcademicLevel.onItemSelectedListener =
+                    object : AdapterView.OnItemSelectedListener {
+                        override fun onItemSelected(
+                            parent: AdapterView<*>?,
+                            view: View?,
+                            position: Int,
+                            id: Long
+                        ) {
+                            if (position == 0) {
+                                selectedYearLevel = null
+                                selectedSemester = null
+                            } else {
+                                val (year, sem) = availableLevels[position - 1]
+                                selectedYearLevel = year
+                                selectedSemester = sem
+                            }
+                            loadCourses()
                         }
-                        loadCourses()
+
+                        override fun onNothingSelected(parent: AdapterView<*>?) {}
                     }
-                    override fun onNothingSelected(parent: AdapterView<*>?) {}
-                }
                 loadCourses()
             } catch (e: Exception) {
                 Log.e("MainActivity", "Failed to load courses for levels", e)
-                if (e is HttpException && e.code() == 401) handleSessionFailure("Unauthorized", true)
+                if (e is HttpException && e.code() == 401) handleSessionFailure(
+                    "Unauthorized",
+                    true
+                )
             }
         }
     }
@@ -1310,9 +1688,13 @@ class MainActivity : AppCompatActivity() {
     private fun loadCourses() {
         lifecycleScope.launch {
             try {
-                val fetchedCourses = RetrofitClient.apiService.getCourses(selectedCurriculumId, selectedYearLevel, selectedSemester)
+                val fetchedCourses = RetrofitClient.apiService.getCourses(
+                    selectedCurriculumId,
+                    selectedYearLevel,
+                    selectedSemester
+                )
                 courses = fetchedCourses
-                
+
                 val container = binding.layoutCourse.llCourseList
                 container.removeAllViews()
 
@@ -1329,27 +1711,32 @@ class MainActivity : AppCompatActivity() {
 
                     groupedCourses.forEach { (level, courseList) ->
                         val (year, sem) = level
-                        val yearStr = when(year) {
+                        val yearStr = when (year) {
                             1 -> "1st"
                             2 -> "2nd"
                             3 -> "3rd"
                             4 -> "4th"
                             else -> "${year}th"
                         }
-                        val semStr = when(sem) {
+                        val semStr = when (sem) {
                             1 -> "1st"
                             2 -> "2nd"
                             else -> "${sem}th"
                         }
                         val totalUnits = courseList.sumOf { it.credit_units }
-                        
+
                         // Add Header for this group
                         val headerView = TextView(this@MainActivity).apply {
                             layoutParams = LinearLayout.LayoutParams(
                                 LinearLayout.LayoutParams.MATCH_PARENT,
                                 LinearLayout.LayoutParams.WRAP_CONTENT
                             ).apply {
-                                setMargins(0, (if (container.childCount > 0) 25 else 0).dpToPx(), 0, 0)
+                                setMargins(
+                                    0,
+                                    (if (container.childCount > 0) 25 else 0).dpToPx(),
+                                    0,
+                                    0
+                                )
                             }
                             setBackgroundColor(Color.parseColor("#1E2124"))
                             setTextColor(Color.WHITE)
@@ -1364,17 +1751,23 @@ class MainActivity : AppCompatActivity() {
 
                         // Add Courses for this group
                         courseList.forEach { course ->
-                            val itemView = LayoutInflater.from(this@MainActivity).inflate(R.layout.item_course, container, false)
+                            val itemView = LayoutInflater.from(this@MainActivity)
+                                .inflate(R.layout.item_course, container, false)
                             // Add horizontal padding only to course items
-                            val contentLayout = itemView.findViewById<LinearLayout>(R.id.ll_course_item_root)
+                            val contentLayout =
+                                itemView.findViewById<LinearLayout>(R.id.ll_course_item_root)
                             contentLayout.setPadding(20.dpToPx(), 0, 20.dpToPx(), 0)
 
-                            itemView.findViewById<TextView>(R.id.tv_course_code).text = course.course_code
-                            itemView.findViewById<TextView>(R.id.tv_course_title).text = course.descriptive_title
-                            itemView.findViewById<TextView>(R.id.tv_course_details).text = "${course.credit_units} Units | Lec: ${course.lecture_hours} Lab: ${course.laboratory_hours}"
-                            
-                            val layoutActions = itemView.findViewById<LinearLayout>(R.id.ll_course_actions)
-                            
+                            itemView.findViewById<TextView>(R.id.tv_course_code).text =
+                                course.course_code
+                            itemView.findViewById<TextView>(R.id.tv_course_title).text =
+                                course.descriptive_title
+                            itemView.findViewById<TextView>(R.id.tv_course_details).text =
+                                "${course.credit_units} Units | Lec: ${course.lecture_hours} Lab: ${course.laboratory_hours}"
+
+                            val layoutActions =
+                                itemView.findViewById<LinearLayout>(R.id.ll_course_actions)
+
                             itemView.setOnClickListener {
                                 if (layoutActions.visibility == View.VISIBLE) {
                                     layoutActions.visibility = View.GONE
@@ -1386,15 +1779,17 @@ class MainActivity : AppCompatActivity() {
                                 }
                             }
 
-                            itemView.findViewById<ImageButton>(R.id.btn_edit_course).setOnClickListener {
-                                showEditCourseDialog(course)
-                                layoutActions.visibility = View.GONE
-                            }
-                            
-                            itemView.findViewById<ImageButton>(R.id.btn_delete_course).setOnClickListener {
-                                showDeleteCourseConfirmation(course)
-                                layoutActions.visibility = View.GONE
-                            }
+                            itemView.findViewById<ImageButton>(R.id.btn_edit_course)
+                                .setOnClickListener {
+                                    showEditCourseDialog(course)
+                                    layoutActions.visibility = View.GONE
+                                }
+
+                            itemView.findViewById<ImageButton>(R.id.btn_delete_course)
+                                .setOnClickListener {
+                                    showDeleteCourseConfirmation(course)
+                                    layoutActions.visibility = View.GONE
+                                }
 
                             container.addView(itemView)
                         }
@@ -1402,7 +1797,10 @@ class MainActivity : AppCompatActivity() {
                 }
             } catch (e: Exception) {
                 Log.e("MainActivity", "Failed to load courses", e)
-                if (e is HttpException && e.code() == 401) handleSessionFailure("Unauthorized", true)
+                if (e is HttpException && e.code() == 401) handleSessionFailure(
+                    "Unauthorized",
+                    true
+                )
             }
         }
     }
@@ -1412,8 +1810,11 @@ class MainActivity : AppCompatActivity() {
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
         dialog.setContentView(R.layout.dialog_add_course)
         dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-        dialog.window?.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-        
+        dialog.window?.setLayout(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+
         val etCode = dialog.findViewById<EditText>(R.id.et_course_code)
         val etTitle = dialog.findViewById<EditText>(R.id.et_descriptive_title)
         val etLec = dialog.findViewById<EditText>(R.id.et_lec_hours)
@@ -1430,7 +1831,7 @@ class MainActivity : AppCompatActivity() {
             val lec = etLec.text.toString().toIntOrNull() ?: 0
             val lab = etLab.text.toString().toIntOrNull() ?: 0
             val units = etUnits.text.toString().toIntOrNull() ?: 0
-            
+
             val year = selectedYearLevel ?: 1
             val sem = selectedSemester ?: 1
 
@@ -1443,17 +1844,31 @@ class MainActivity : AppCompatActivity() {
         dialog.show()
     }
 
-    private fun saveCourse(code: String, title: String, lec: Int, lab: Int, units: Int, year: Int, sem: Int, dialog: Dialog) {
+    private fun saveCourse(
+        code: String,
+        title: String,
+        lec: Int,
+        lab: Int,
+        units: Int,
+        year: Int,
+        sem: Int,
+        dialog: Dialog
+    ) {
         lifecycleScope.launch {
             try {
-                val courseRequest = CourseRequest(selectedCurriculumId!!, code, title, lab, lec, units, year, sem)
+                val courseRequest =
+                    CourseRequest(selectedCurriculumId!!, code, title, lab, lec, units, year, sem)
                 RetrofitClient.apiService.addCourse(courseRequest)
-                Toast.makeText(this@MainActivity, "Course added successfully", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@MainActivity, "Course added successfully", Toast.LENGTH_SHORT)
+                    .show()
                 dialog.dismiss()
                 loadCoursesAndPopulateLevels()
             } catch (e: Exception) {
                 Toast.makeText(this@MainActivity, "Failed to add course", Toast.LENGTH_SHORT).show()
-                if (e is HttpException && e.code() == 401) handleSessionFailure("Unauthorized", true)
+                if (e is HttpException && e.code() == 401) handleSessionFailure(
+                    "Unauthorized",
+                    true
+                )
             }
         }
     }
@@ -1463,7 +1878,10 @@ class MainActivity : AppCompatActivity() {
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
         dialog.setContentView(R.layout.dialog_add_course)
         dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-        dialog.window?.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        dialog.window?.setLayout(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
 
         dialog.findViewById<TextView>(R.id.tv_header).text = "Edit Course"
         val etCode = dialog.findViewById<EditText>(R.id.et_course_code)
@@ -1473,7 +1891,7 @@ class MainActivity : AppCompatActivity() {
         val etUnits = dialog.findViewById<EditText>(R.id.et_credit_hours)
         val btnSave = dialog.findViewById<Button>(R.id.btn_add)
         btnSave.text = "Update"
-        
+
         etCode.setText(course.course_code)
         etTitle.setText(course.descriptive_title)
         etLec.setText(course.lecture_hours.toString())
@@ -1486,26 +1904,50 @@ class MainActivity : AppCompatActivity() {
             val lec = etLec.text.toString().toIntOrNull() ?: 0
             val lab = etLab.text.toString().toIntOrNull() ?: 0
             val units = etUnits.text.toString().toIntOrNull() ?: 0
-            
+
             if (code.isNotEmpty() && title.isNotEmpty()) {
-                updateCourse(course.id, code, title, lec, lab, units, course.year_level, course.semester, dialog)
+                updateCourse(
+                    course.id,
+                    code,
+                    title,
+                    lec,
+                    lab,
+                    units,
+                    course.year_level,
+                    course.semester,
+                    dialog
+                )
             }
         }
         dialog.findViewById<Button>(R.id.btn_cancel).setOnClickListener { dialog.dismiss() }
         dialog.show()
     }
 
-    private fun updateCourse(id: Int, code: String, title: String, lec: Int, lab: Int, units: Int, year: Int, sem: Int, dialog: Dialog) {
+    private fun updateCourse(
+        id: Int,
+        code: String,
+        title: String,
+        lec: Int,
+        lab: Int,
+        units: Int,
+        year: Int,
+        sem: Int,
+        dialog: Dialog
+    ) {
         lifecycleScope.launch {
             try {
-                val courseRequest = CourseRequest(selectedCurriculumId!!, code, title, lab, lec, units, year, sem)
+                val courseRequest =
+                    CourseRequest(selectedCurriculumId!!, code, title, lab, lec, units, year, sem)
                 RetrofitClient.apiService.updateCourse(id, courseRequest)
                 Toast.makeText(this@MainActivity, "Course updated", Toast.LENGTH_SHORT).show()
                 dialog.dismiss()
                 loadCourses()
             } catch (e: Exception) {
                 Log.e("MainActivity", "Failed to update course", e)
-                if (e is HttpException && e.code() == 401) handleSessionFailure("Unauthorized", true)
+                if (e is HttpException && e.code() == 401) handleSessionFailure(
+                    "Unauthorized",
+                    true
+                )
             }
         }
     }
@@ -1529,6 +1971,132 @@ class MainActivity : AppCompatActivity() {
                 loadCourses()
             } catch (e: Exception) {
                 Log.e("MainActivity", "Failed to delete course", e)
+                if (e is HttpException && e.code() == 401) handleSessionFailure(
+                    "Unauthorized",
+                    true
+                )
+            }
+        }
+    }
+
+    private fun showAddFacultyDialog() {
+        val dialog = Dialog(this)
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+        dialog.setContentView(R.layout.dialog_add_faculty)
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.window?.setLayout(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+
+        val etFirstName = dialog.findViewById<EditText>(R.id.et_first_name)
+        val etLastName = dialog.findViewById<EditText>(R.id.et_last_name)
+        val spinnerGender = dialog.findViewById<Spinner>(R.id.spinner_gender)
+        val etEmail = dialog.findViewById<EditText>(R.id.et_email)
+        val etPassword = dialog.findViewById<EditText>(R.id.et_password)
+        val spinnerHighestDegree = dialog.findViewById<Spinner>(R.id.spinner_highest_degree)
+        val spinnerSpecialization = dialog.findViewById<Spinner>(R.id.spinner_specialization)
+
+        val cbAdmin = dialog.findViewById<CheckBox>(R.id.cb_role_admin)
+        val cbStaff = dialog.findViewById<CheckBox>(R.id.cb_role_staff)
+        val cbQualified = dialog.findViewById<CheckBox>(R.id.cb_qualified)
+        val cbNa = dialog.findViewById<CheckBox>(R.id.cb_na)
+
+        val spinnerEmpStatus = dialog.findViewById<Spinner>(R.id.spinner_employment_status)
+
+        val dialogSelectedSpecIds = mutableSetOf<Int>()
+
+        spinnerGender.adapter = createPlaceholderSpinnerAdapter(this, "Select Gender", listOf("Male", "Female"))
+        spinnerEmpStatus.adapter = createPlaceholderSpinnerAdapter(this, "Select Employment Status", listOf("Full-Time", "Part-Time", "Contractual"))
+        spinnerHighestDegree.adapter = createPlaceholderSpinnerAdapter(this, "Select Degree", listOf("Master's Degree", "Doctoral's Degree"))
+
+        spinnerSpecialization.setOnTouchListener { _, event ->
+            if (event.action == android.view.MotionEvent.ACTION_UP) {
+                showDialogMultiSelectSpec(dialogSelectedSpecIds) { updatedIds ->
+                    dialogSelectedSpecIds.clear()
+                    dialogSelectedSpecIds.addAll(updatedIds)
+                    val selectedItems =
+                        allCourseOptions.filter { dialogSelectedSpecIds.contains(it.id) }
+                    val displayText = when {
+                        selectedItems.isEmpty() -> "Select Specialization"
+                        selectedItems.size == 1 -> selectedItems[0].course_code
+                        else -> "${selectedItems[0].course_code} (+${selectedItems.size - 1})"
+                    }
+                    val updatedAdapter = ArrayAdapter(
+                        this,
+                        R.layout.item_spinner_selected,
+                        android.R.id.text1,
+                        listOf(displayText)
+                    )
+                    updatedAdapter.setDropDownViewResource(R.layout.item_spinner_dropdown)
+                    spinnerSpecialization.adapter = updatedAdapter
+                }
+            }
+            true
+        }
+
+        cbAdmin.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) cbStaff.isChecked = false
+        }
+        cbStaff.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) cbAdmin.isChecked = false
+        }
+        cbQualified.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) cbNa.isChecked = false
+        }
+        cbNa.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) cbQualified.isChecked = false
+        }
+
+        dialog.findViewById<Button>(R.id.btn_cancel).setOnClickListener { dialog.dismiss() }
+        dialog.findViewById<Button>(R.id.btn_save).setOnClickListener {
+            val role =
+                if (cbAdmin.isChecked) "admin" else if (cbStaff.isChecked) "staff" else "staff"
+            val prc = if (cbQualified.isChecked) "Yes" else "No"
+
+            // ADD this validation:
+            if (spinnerGender.selectedItemPosition == 0 || spinnerEmpStatus.selectedItemPosition == 0 || spinnerHighestDegree.selectedItemPosition == 0) {
+            Toast.makeText(this, "Please select all required fields", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            // REPLACE the old data map:
+            val request = FacultyRequest(
+                first_name = etFirstName.text.toString(),
+                last_name = etLastName.text.toString(),
+                email = etEmail.text.toString(),
+                gender = spinnerGender.selectedItem.toString(),
+                password = etPassword.text.toString(),
+                role = role,
+                employment_status = spinnerEmpStatus.selectedItem.toString().lowercase().replace("-", "_"),
+                highest_degree = if (spinnerHighestDegree.selectedItemPosition == 0) "" else spinnerHighestDegree.selectedItem.toString(),
+                specialization = dialogSelectedSpecIds.toList(),
+                prc_licensed = prc
+            )
+
+            if (request.first_name.isNotEmpty() && request.email.isNotEmpty()) {
+                saveFaculty(request, dialog)
+            } else {
+                Toast.makeText(this, "Please fill required fields", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        dialog.show()
+    }
+
+    private fun saveFaculty(data: FacultyRequest, dialog: Dialog) {
+        lifecycleScope.launch {
+            try {
+                RetrofitClient.apiService.addFaculty(data)
+                Toast.makeText(this@MainActivity, "Faculty added successfully", Toast.LENGTH_SHORT).show()
+                dialog.dismiss()
+                if (binding.layoutSchedule.root.visibility == View.VISIBLE && binding.layoutSchedule.llFacultySection.visibility == View.VISIBLE) {
+                    loadFacultyListIntoSchedule()
+                }
+                fetchDashboardData()
+            } catch (e: Exception) {
+                Log.e("MainActivity", "Failed to add faculty", e)
+                Toast.makeText(this@MainActivity, "Failed to add faculty", Toast.LENGTH_SHORT).show()
                 if (e is HttpException && e.code() == 401) handleSessionFailure("Unauthorized", true)
             }
         }
@@ -1536,7 +2104,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateNavUI(nav: String) {
         if (currentNav == nav) return
-        
+
         // Trigger animations for the navigation anchor and the main scrollable content area
         TransitionManager.beginDelayedTransition(binding.navAnchor, AutoTransition())
         (binding.scrollContent.getChildAt(0) as? ViewGroup)?.let {
@@ -1544,7 +2112,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         currentNav = nav
-        
+
         val email = currentUserFaculty?.email?.lowercase()?.trim() ?: ""
         val isStaff = email == "mpmariano@tip.edu.ph"
 
@@ -1553,15 +2121,27 @@ class MainActivity : AppCompatActivity() {
         resetNavItem(binding.navCourse, binding.tvCourse, binding.ivCourse)
         resetNavItem(binding.navSchedule, binding.tvSchedule, binding.ivSchedule)
         resetNavItem(binding.navProfile, binding.tvProfile, binding.ivProfile)
-        
+
         val staffHome = findViewById<LinearLayout>(R.id.nav_staff_home)
         val staffSchedule = findViewById<LinearLayout>(R.id.nav_staff_schedule)
         val staffProfile = findViewById<LinearLayout>(R.id.nav_staff_profile)
-        
+
         if (staffHome != null) {
-            resetStaffNavItem(staffHome, findViewById(R.id.tv_staff_home), findViewById(R.id.iv_staff_home))
-            resetStaffNavItem(staffSchedule, findViewById(R.id.tv_staff_schedule), findViewById(R.id.iv_staff_schedule))
-            resetStaffNavItem(staffProfile, findViewById(R.id.tv_staff_profile), findViewById(R.id.iv_staff_profile))
+            resetStaffNavItem(
+                staffHome,
+                findViewById(R.id.tv_staff_home),
+                findViewById(R.id.iv_staff_home)
+            )
+            resetStaffNavItem(
+                staffSchedule,
+                findViewById(R.id.tv_staff_schedule),
+                findViewById(R.id.iv_staff_schedule)
+            )
+            resetStaffNavItem(
+                staffProfile,
+                findViewById(R.id.tv_staff_profile),
+                findViewById(R.id.iv_staff_profile)
+            )
         }
 
         val activeBg = ResourcesCompat.getDrawable(resources, R.drawable.bg_active_nav, theme)
@@ -1570,9 +2150,23 @@ class MainActivity : AppCompatActivity() {
         when (nav) {
             "home" -> {
                 if (isStaff) {
-                    staffHome?.let { setActiveStaffNavItem(it, findViewById(R.id.tv_staff_home), findViewById(R.id.iv_staff_home), activeBg, activeColor) }
+                    staffHome?.let {
+                        setActiveStaffNavItem(
+                            it,
+                            findViewById(R.id.tv_staff_home),
+                            findViewById(R.id.iv_staff_home),
+                            activeBg,
+                            activeColor
+                        )
+                    }
                 } else {
-                    setActiveNavItem(binding.navHome, binding.tvHome, binding.ivHome, activeBg, activeColor)
+                    setActiveNavItem(
+                        binding.navHome,
+                        binding.tvHome,
+                        binding.ivHome,
+                        activeBg,
+                        activeColor
+                    )
                 }
                 binding.layoutHome.visibility = View.VISIBLE
                 binding.layoutCourse.root.visibility = View.GONE
@@ -1581,8 +2175,15 @@ class MainActivity : AppCompatActivity() {
                 binding.layoutStaffSchedule.root.visibility = View.GONE
                 binding.layoutStaffProfile.root.visibility = View.GONE
             }
+
             "course" -> {
-                setActiveNavItem(binding.navCourse, binding.tvCourse, binding.ivCourse, activeBg, activeColor)
+                setActiveNavItem(
+                    binding.navCourse,
+                    binding.tvCourse,
+                    binding.ivCourse,
+                    activeBg,
+                    activeColor
+                )
                 binding.layoutHome.visibility = View.GONE
                 binding.layoutCourse.root.visibility = View.VISIBLE
                 binding.layoutSchedule.root.visibility = View.GONE
@@ -1591,13 +2192,28 @@ class MainActivity : AppCompatActivity() {
                 binding.layoutStaffProfile.root.visibility = View.GONE
                 loadCourses()
             }
+
             "schedule" -> {
                 if (isStaff) {
-                    staffSchedule?.let { setActiveStaffNavItem(it, findViewById(R.id.tv_staff_schedule), findViewById(R.id.iv_staff_schedule), activeBg, activeColor) }
+                    staffSchedule?.let {
+                        setActiveStaffNavItem(
+                            it,
+                            findViewById(R.id.tv_staff_schedule),
+                            findViewById(R.id.iv_staff_schedule),
+                            activeBg,
+                            activeColor
+                        )
+                    }
                     binding.layoutStaffSchedule.root.visibility = View.VISIBLE
                     binding.layoutSchedule.root.visibility = View.GONE
                 } else {
-                    setActiveNavItem(binding.navSchedule, binding.tvSchedule, binding.ivSchedule, activeBg, activeColor)
+                    setActiveNavItem(
+                        binding.navSchedule,
+                        binding.tvSchedule,
+                        binding.ivSchedule,
+                        activeBg,
+                        activeColor
+                    )
                     binding.layoutSchedule.root.visibility = View.VISIBLE
                     binding.layoutStaffSchedule.root.visibility = View.GONE
                 }
@@ -1607,13 +2223,28 @@ class MainActivity : AppCompatActivity() {
                 binding.layoutStaffProfile.root.visibility = View.GONE
                 loadMySchedule(isAdmin = !isStaff)
             }
+
             "profile" -> {
                 if (isStaff) {
-                    staffProfile?.let { setActiveStaffNavItem(it, findViewById(R.id.tv_staff_profile), findViewById(R.id.iv_staff_profile), activeBg, activeColor) }
+                    staffProfile?.let {
+                        setActiveStaffNavItem(
+                            it,
+                            findViewById(R.id.tv_staff_profile),
+                            findViewById(R.id.iv_staff_profile),
+                            activeBg,
+                            activeColor
+                        )
+                    }
                     binding.layoutStaffProfile.root.visibility = View.VISIBLE
                     binding.layoutProfile.root.visibility = View.GONE
                 } else {
-                    setActiveNavItem(binding.navProfile, binding.tvProfile, binding.ivProfile, activeBg, activeColor)
+                    setActiveNavItem(
+                        binding.navProfile,
+                        binding.tvProfile,
+                        binding.ivProfile,
+                        activeBg,
+                        activeColor
+                    )
                     binding.layoutProfile.root.visibility = View.VISIBLE
                     binding.layoutStaffProfile.root.visibility = View.GONE
                 }
@@ -1634,7 +2265,13 @@ class MainActivity : AppCompatActivity() {
         layout.layoutParams = params
     }
 
-    private fun setActiveNavItem(layout: LinearLayout, textView: TextView, imageView: ImageView, activeBg: android.graphics.drawable.Drawable?, activeColor: Int) {
+    private fun setActiveNavItem(
+        layout: LinearLayout,
+        textView: TextView,
+        imageView: ImageView,
+        activeBg: android.graphics.drawable.Drawable?,
+        activeColor: Int
+    ) {
         layout.background = activeBg
         textView.visibility = View.VISIBLE
         imageView.setColorFilter(activeColor)
@@ -1642,7 +2279,7 @@ class MainActivity : AppCompatActivity() {
         params.weight = 55f
         layout.layoutParams = params
     }
-    
+
     private fun resetStaffNavItem(layout: LinearLayout, textView: TextView, imageView: ImageView) {
         layout.background = null
         textView.visibility = View.GONE
@@ -1652,7 +2289,13 @@ class MainActivity : AppCompatActivity() {
         layout.layoutParams = params
     }
 
-    private fun setActiveStaffNavItem(layout: LinearLayout, textView: TextView, imageView: ImageView, activeBg: android.graphics.drawable.Drawable?, activeColor: Int) {
+    private fun setActiveStaffNavItem(
+        layout: LinearLayout,
+        textView: TextView,
+        imageView: ImageView,
+        activeBg: android.graphics.drawable.Drawable?,
+        activeColor: Int
+    ) {
         layout.background = activeBg
         textView.visibility = View.VISIBLE
         imageView.setColorFilter(activeColor)
@@ -1678,7 +2321,8 @@ class MainActivity : AppCompatActivity() {
             binding.tvNoRecentActivity.visibility = View.GONE
             binding.tvRecentActivityDateHeader.visibility = View.VISIBLE
             activities.forEach { activity ->
-                val itemView = LayoutInflater.from(this).inflate(R.layout.item_recent_activity, container, false)
+                val itemView = LayoutInflater.from(this)
+                    .inflate(R.layout.item_recent_activity, container, false)
                 itemView.findViewById<TextView>(R.id.tv_activity_message).text = activity
                 itemView.findViewById<TextView>(R.id.tv_activity_time).text = "Today"
                 container.addView(itemView)
@@ -1689,7 +2333,7 @@ class MainActivity : AppCompatActivity() {
     private fun setupPrinting() {
         binding.layoutSchedule.btnPrint.setOnClickListener { printSchedule() }
         binding.layoutSchedule.btnDownloadPdf.setOnClickListener { printSchedule() }
-        
+
         binding.layoutStaffSchedule.btnStaffPrint.setOnClickListener { printSchedule() }
         binding.layoutStaffSchedule.btnStaffDownloadPdf.setOnClickListener { printSchedule() }
     }
@@ -1702,8 +2346,12 @@ class MainActivity : AppCompatActivity() {
                 runOnUiThread { doPrint(htmlContent) }
             } catch (e: Exception) {
                 Log.e("MainActivity", "Print failed", e)
-                if (e is HttpException && e.code() == 401) handleSessionFailure("Unauthorized", true)
-                else Toast.makeText(this@MainActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                if (e is HttpException && e.code() == 401) handleSessionFailure(
+                    "Unauthorized",
+                    true
+                )
+                else Toast.makeText(this@MainActivity, "Error: ${e.message}", Toast.LENGTH_SHORT)
+                    .show()
             }
         }
     }
@@ -1729,7 +2377,8 @@ class MainActivity : AppCompatActivity() {
         if (isAuthFailureHandled) return
         if (isAuthError) isAuthFailureHandled = true
         runOnUiThread {
-            val displayMessage = if (isAuthError) "Session expired. Please login again." else message
+            val displayMessage =
+                if (isAuthError) "Session expired. Please login again." else message
             Toast.makeText(this, displayMessage, Toast.LENGTH_LONG).show()
             RetrofitClient.logout()
             redirectToLogin()
@@ -1745,12 +2394,25 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupProfileLogic() {
         // Shared Setup Logic
-        setupProfileSpinners(binding.layoutProfile.spinnerGender, binding.layoutProfile.spinnerEmploymentStatus, binding.layoutProfile.spinnerDegree)
-        setupProfileSpinners(binding.layoutStaffProfile.spinnerStaffGender, binding.layoutStaffProfile.spinnerStaffEmploymentStatus, binding.layoutStaffProfile.spinnerStaffDegree)
+        setupProfileSpinners(
+            binding.layoutProfile.spinnerGender,
+            binding.layoutProfile.spinnerEmploymentStatus,
+            binding.layoutProfile.spinnerDegree
+        )
+        setupProfileSpinners(
+            binding.layoutStaffProfile.spinnerStaffGender,
+            binding.layoutStaffProfile.spinnerStaffEmploymentStatus,
+            binding.layoutStaffProfile.spinnerStaffDegree
+        )
 
         // Admin Listeners
-        binding.layoutProfile.btnEditProfile.setOnClickListener { toggleProfileEdit(true, isAdmin = true) }
-        binding.layoutProfile.btnCancelEdit.setOnClickListener { 
+        binding.layoutProfile.btnEditProfile.setOnClickListener {
+            toggleProfileEdit(
+                true,
+                isAdmin = true
+            )
+        }
+        binding.layoutProfile.btnCancelEdit.setOnClickListener {
             toggleProfileEdit(false, isAdmin = true)
             currentUserFaculty?.let { restoreProfileData(it, isAdmin = true) }
         }
@@ -1758,42 +2420,84 @@ class MainActivity : AppCompatActivity() {
         binding.layoutProfile.btnLogout.setOnClickListener { logout() }
 
         // Staff Listeners
-        binding.layoutStaffProfile.btnStaffEditProfile.setOnClickListener { toggleProfileEdit(true, isAdmin = false) }
-        binding.layoutStaffProfile.btnStaffCancelEdit.setOnClickListener { 
+        binding.layoutStaffProfile.btnStaffEditProfile.setOnClickListener {
+            toggleProfileEdit(
+                true,
+                isAdmin = false
+            )
+        }
+        binding.layoutStaffProfile.btnStaffCancelEdit.setOnClickListener {
             toggleProfileEdit(false, isAdmin = false)
             currentUserFaculty?.let { restoreProfileData(it, isAdmin = false) }
         }
-        binding.layoutStaffProfile.btnStaffSaveProfile.setOnClickListener { saveProfileChanges(isAdmin = false) }
+        binding.layoutStaffProfile.btnStaffSaveProfile.setOnClickListener {
+            saveProfileChanges(
+                isAdmin = false
+            )
+        }
         binding.layoutStaffProfile.btnStaffLogout.setOnClickListener { logout() }
 
         // Mutual Exclusivity
-        binding.layoutProfile.cbQualified.setOnCheckedChangeListener { _, isChecked -> if (isChecked) binding.layoutProfile.cbNa.isChecked = false }
-        binding.layoutProfile.cbNa.setOnCheckedChangeListener { _, isChecked -> if (isChecked) binding.layoutProfile.cbQualified.isChecked = false }
-        
-        binding.layoutStaffProfile.cbStaffQualified.setOnCheckedChangeListener { _, isChecked -> if (isChecked) binding.layoutStaffProfile.cbStaffNa.isChecked = false }
-        binding.layoutStaffProfile.cbStaffNa.setOnCheckedChangeListener { _, isChecked -> if (isChecked) binding.layoutStaffProfile.cbStaffQualified.isChecked = false }
+        binding.layoutProfile.cbQualified.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) binding.layoutProfile.cbNa.isChecked = false
+        }
+        binding.layoutProfile.cbNa.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) binding.layoutProfile.cbQualified.isChecked = false
+        }
+
+        binding.layoutStaffProfile.cbStaffQualified.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) binding.layoutStaffProfile.cbStaffNa.isChecked = false
+        }
+        binding.layoutStaffProfile.cbStaffNa.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) binding.layoutStaffProfile.cbStaffQualified.isChecked = false
+        }
 
         // Visibility Toggles
         setupPasswordToggle(binding.layoutProfile.ivShowPassword, binding.layoutProfile.etPassword)
-        setupPasswordToggle(binding.layoutProfile.ivShowNewPassword, binding.layoutProfile.etNewPassword)
-        setupPasswordToggle(binding.layoutStaffProfile.ivStaffShowPassword, binding.layoutStaffProfile.etStaffPassword)
-        setupPasswordToggle(binding.layoutStaffProfile.ivStaffShowNewPassword, binding.layoutStaffProfile.etStaffNewPassword)
+        setupPasswordToggle(
+            binding.layoutProfile.ivShowNewPassword,
+            binding.layoutProfile.etNewPassword
+        )
+        setupPasswordToggle(
+            binding.layoutStaffProfile.ivStaffShowPassword,
+            binding.layoutStaffProfile.etStaffPassword
+        )
+        setupPasswordToggle(
+            binding.layoutStaffProfile.ivStaffShowNewPassword,
+            binding.layoutStaffProfile.etStaffNewPassword
+        )
 
         toggleProfileEdit(false, isAdmin = true)
         toggleProfileEdit(false, isAdmin = false)
     }
 
     private fun setupProfileSpinners(gender: Spinner, emp: Spinner, deg: Spinner) {
-        gender.adapter = ArrayAdapter(this, R.layout.item_spinner_selected, android.R.id.text1, listOf("Male", "Female")).apply { setDropDownViewResource(R.layout.item_spinner_dropdown) }
-        emp.adapter = ArrayAdapter(this, R.layout.item_spinner_selected, android.R.id.text1, listOf("Full-Time", "Part-Time", "Contractual")).apply { setDropDownViewResource(R.layout.item_spinner_dropdown) }
-        deg.adapter = ArrayAdapter(this, R.layout.item_spinner_selected, android.R.id.text1, listOf("Master's Degree", "Doctoral's Degree")).apply { setDropDownViewResource(R.layout.item_spinner_dropdown) }
+        gender.adapter = ArrayAdapter(
+            this,
+            R.layout.item_spinner_selected,
+            android.R.id.text1,
+            listOf("Male", "Female")
+        ).apply { setDropDownViewResource(R.layout.item_spinner_dropdown) }
+        emp.adapter = ArrayAdapter(
+            this,
+            R.layout.item_spinner_selected,
+            android.R.id.text1,
+            listOf("Full-Time", "Part-Time", "Contractual")
+        ).apply { setDropDownViewResource(R.layout.item_spinner_dropdown) }
+        deg.adapter = ArrayAdapter(
+            this,
+            R.layout.item_spinner_selected,
+            android.R.id.text1,
+            listOf("Master's Degree", "Doctoral's Degree")
+        ).apply { setDropDownViewResource(R.layout.item_spinner_dropdown) }
     }
 
     private fun setupPasswordToggle(icon: ImageView, editText: EditText) {
         var isVisible = false
         icon.setOnClickListener {
             isVisible = !isVisible
-            editText.transformationMethod = if (isVisible) HideReturnsTransformationMethod.getInstance() else PasswordTransformationMethod.getInstance()
+            editText.transformationMethod =
+                if (isVisible) HideReturnsTransformationMethod.getInstance() else PasswordTransformationMethod.getInstance()
             icon.setColorFilter(if (isVisible) Color.parseColor("#1E2124") else Color.parseColor("#888888"))
             editText.setSelection(editText.text.length)
         }
@@ -1823,7 +2527,7 @@ class MainActivity : AppCompatActivity() {
             l.etStaffPassword.isEnabled = enabled
             l.etStaffNewPassword.isEnabled = enabled
             l.llStaffChangePasswordContainer.visibility = if (enabled) View.VISIBLE else View.GONE
-            
+
             // Employment Status, Educational Attainment and PRC License are ALWAYS read-only for staff
             l.spinnerStaffEmploymentStatus.isEnabled = false
             l.spinnerStaffDegree.isEnabled = false
@@ -1866,20 +2570,32 @@ class MainActivity : AppCompatActivity() {
     private fun saveProfileChanges(isAdmin: Boolean) {
         val l = if (isAdmin) binding.layoutProfile else null
         val ls = if (!isAdmin) binding.layoutStaffProfile else null
-        
-        val newFirstName = l?.etFirstName?.text?.toString() ?: ls?.etStaffFirstName?.text?.toString() ?: ""
-        val newLastName = l?.etLastName?.text?.toString() ?: ls?.etStaffLastName?.text?.toString() ?: ""
-        
-        val currentPassword = l?.etPassword?.text?.toString() ?: ls?.etStaffPassword?.text?.toString() ?: ""
-        val newPassword = l?.etNewPassword?.text?.toString() ?: ls?.etStaffNewPassword?.text?.toString() ?: ""
+
+        val newFirstName =
+            l?.etFirstName?.text?.toString() ?: ls?.etStaffFirstName?.text?.toString() ?: ""
+        val newLastName =
+            l?.etLastName?.text?.toString() ?: ls?.etStaffLastName?.text?.toString() ?: ""
+
+        val currentPassword =
+            l?.etPassword?.text?.toString() ?: ls?.etStaffPassword?.text?.toString() ?: ""
+        val newPassword =
+            l?.etNewPassword?.text?.toString() ?: ls?.etStaffNewPassword?.text?.toString() ?: ""
 
         if (newPassword.isNotEmpty()) {
             if (currentPassword.isEmpty()) {
-                Toast.makeText(this, "Please enter your Current Password to change it", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    this,
+                    "Please enter your Current Password to change it",
+                    Toast.LENGTH_SHORT
+                ).show()
                 return
             }
             if (!validatePassword(newPassword)) {
-                Toast.makeText(this, "New Password Must be: at least 8 characters, 1 uppercase letter (A-Z), 1 special character (!@#$%^&*)", Toast.LENGTH_LONG).show()
+                Toast.makeText(
+                    this,
+                    "New Password Must be: at least 8 characters, 1 uppercase letter (A-Z), 1 special character (!@#$%^&*)",
+                    Toast.LENGTH_LONG
+                ).show()
                 return
             }
         }
@@ -1893,7 +2609,7 @@ class MainActivity : AppCompatActivity() {
                     "last_name" to newLastName,
                     "specialization" to selectedSpecIds.toList()
                 )
-                
+
                 if (newPassword.isNotEmpty()) {
                     updateData["current_password"] = currentPassword
                     updateData["new_password"] = newPassword
@@ -1904,16 +2620,17 @@ class MainActivity : AppCompatActivity() {
                 Toast.makeText(this@MainActivity, "Profile updated!", Toast.LENGTH_SHORT).show()
                 toggleProfileEdit(false, isAdmin)
                 updateUserDataUI(updatedFaculty)
-                
+
                 // Clear password fields
                 l?.etPassword?.setText("")
                 l?.etNewPassword?.setText("")
                 ls?.etStaffPassword?.setText("")
                 ls?.etStaffNewPassword?.setText("")
-                
+
             } catch (e: Exception) {
                 Log.e("MainActivity", "Update failed", e)
-                val errorMsg = if (e is HttpException && e.code() == 400) "Invalid current password or update data" else "Update failed"
+                val errorMsg =
+                    if (e is HttpException && e.code() == 400) "Invalid current password or update data" else "Update failed"
                 Toast.makeText(this@MainActivity, errorMsg, Toast.LENGTH_SHORT).show()
             }
         }
@@ -1924,4 +2641,79 @@ class MainActivity : AppCompatActivity() {
         binding.layoutProfile.tvProfileName.text = "${data.first_name} ${data.last_name}"
         binding.layoutStaffProfile.tvStaffProfileName.text = "${data.first_name} ${data.last_name}"
     }
+
+    private fun createPlaceholderSpinnerAdapter(context: Context, placeholder: String, options: List<String>): ArrayAdapter<String> {
+        val items = listOf(placeholder) + options
+        return object : ArrayAdapter<String>(context, R.layout.item_spinner_selected, items) { // ← no ID in constructor
+            override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+                val view = super.getView(position, convertView, parent)
+                val tv = view.findViewById<TextView>(android.R.id.text1)
+                tv.setTextColor(if (position == 0) Color.parseColor("#AAAAAA") else Color.parseColor("#1E2124"))
+                return view
+            }
+            override fun getDropDownView(position: Int, convertView: View?, parent: ViewGroup): View {
+                if (position == 0) {
+                    return View(context).apply {
+                        visibility = View.GONE
+                        layoutParams = ViewGroup.LayoutParams(0, 0)
+                    }
+                }
+                val view = super.getDropDownView(position, convertView, parent)
+                view.findViewById<TextView>(android.R.id.text1).setTextColor(Color.parseColor("#1E2124"))
+                return view
+            }
+            override fun isEnabled(position: Int) = position != 0
+        }.also {
+            it.setDropDownViewResource(R.layout.item_spinner_dropdown)
+        }
+    }
+
+    private fun showDialogMultiSelectSpec(
+        currentSelectedIds: MutableSet<Int>,
+        onDone: (Set<Int>) -> Unit
+    ) {
+        val dialog = Dialog(this)
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+        dialog.setContentView(R.layout.dialog_multi_select)
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+
+        val height = (resources.displayMetrics.heightPixels * 0.70).toInt()
+        dialog.window?.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, height)
+        dialog.window?.setGravity(Gravity.BOTTOM)
+
+        val container = dialog.findViewById<LinearLayout>(R.id.ll_options_container)
+        container.removeAllViews()
+
+        val tempSelectedIds = currentSelectedIds.toMutableSet()
+
+        allCourseOptions.forEach { course ->
+            val itemView = LayoutInflater.from(this)
+                .inflate(R.layout.item_multi_select_option, container, false)
+            val checkbox = itemView.findViewById<CheckBox>(R.id.checkbox_option)
+            val tvCode = itemView.findViewById<TextView>(R.id.tv_option_code)
+            val tvTitle = itemView.findViewById<TextView>(R.id.tv_option_title)
+
+            tvCode.text = course.course_code
+            tvTitle.text = course.descriptive_title
+            checkbox.isChecked = tempSelectedIds.contains(course.id)
+
+            itemView.setOnClickListener {
+                checkbox.isChecked = !checkbox.isChecked
+                if (checkbox.isChecked) tempSelectedIds.add(course.id)
+                else tempSelectedIds.remove(course.id)
+            }
+
+            container.addView(itemView)
+        }
+
+        dialog.findViewById<ImageView>(R.id.btn_close).setOnClickListener { dialog.dismiss() }
+
+        dialog.findViewById<Button>(R.id.btn_done).setOnClickListener {
+            onDone(tempSelectedIds)
+            dialog.dismiss()
+        }
+
+        dialog.show()
+    }
 }
+

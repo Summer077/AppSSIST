@@ -1,0 +1,296 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:background="@drawable/bg_bottom_nav"
+    android:backgroundTint="#F0F2F5">
+
+    <TextView
+        android:id="@+id/tv_header"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Add Faculty"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="#1E2124"
+        android:fontFamily="@font/lexend"
+        android:layout_marginBottom="16dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="16dp">
+
+        <com.google.android.material.checkbox.MaterialCheckBox
+            android:id="@+id/cb_role_admin"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Admin"
+            android:fontFamily="@font/lexend"
+            android:button="@drawable/bg_checkbox_neumorphic"
+            app:buttonTint="@null"
+            android:layout_marginEnd="20dp"
+            android:paddingStart="8dp" />
+
+        <com.google.android.material.checkbox.MaterialCheckBox
+            android:id="@+id/cb_role_staff"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Staff"
+            android:fontFamily="@font/lexend"
+            android:button="@drawable/bg_checkbox_neumorphic"
+            app:buttonTint="@null"
+            android:paddingStart="8dp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:weightSum="3"
+        android:layout_marginBottom="12dp">
+
+        <FrameLayout
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1.2"
+            android:background="@drawable/bg_neumorphic_recessed"
+            android:paddingHorizontal="12dp"
+            android:layout_marginEnd="8dp">
+            <EditText
+                android:id="@+id/et_first_name"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:hint="First name"
+                android:background="@null"
+                android:textSize="13sp"
+                android:fontFamily="@font/lexend"
+                android:textColor="#1E2124" />
+        </FrameLayout>
+
+        <FrameLayout
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1.2"
+            android:background="@drawable/bg_neumorphic_recessed"
+            android:paddingHorizontal="12dp"
+            android:layout_marginEnd="8dp">
+            <EditText
+                android:id="@+id/et_last_name"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:hint="Last name"
+                android:background="@null"
+                android:textSize="13sp"
+                android:fontFamily="@font/lexend"
+                android:textColor="#1E2124" />
+        </FrameLayout>
+
+        <FrameLayout
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="0.6"
+            android:background="@drawable/bg_neumorphic_recessed">
+            <Spinner
+                android:id="@+id/spinner_gender"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@null"
+                android:overlapAnchor="false"
+                android:popupBackground="@drawable/bg_spinner_popup" />
+            <ImageView
+                android:layout_width="10dp"
+                android:layout_height="10dp"
+                android:layout_gravity="end|center_vertical"
+                android:layout_marginEnd="8dp"
+                android:src="@android:drawable/arrow_down_float"
+                app:tint="#888888" />
+        </FrameLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:weightSum="3"
+        android:layout_marginBottom="12dp">
+
+        <FrameLayout
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_neumorphic_recessed"
+            android:paddingHorizontal="12dp"
+            android:layout_marginEnd="8dp">
+            <EditText
+                android:id="@+id/et_email"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:hint="Email"
+                android:background="@null"
+                android:textSize="13sp"
+                android:fontFamily="@font/lexend"
+                android:textColor="#1E2124" />
+        </FrameLayout>
+
+        <FrameLayout
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_neumorphic_recessed"
+            android:paddingHorizontal="12dp"
+            android:layout_marginEnd="8dp">
+            <EditText
+                android:id="@+id/et_password"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:hint="Password"
+                android:inputType="textPassword"
+                android:background="@null"
+                android:textSize="13sp"
+                android:fontFamily="@font/lexend"
+                android:textColor="#1E2124" />
+        </FrameLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:paddingStart="8dp">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="PRC Licensed:"
+                android:textSize="10sp"
+                android:fontFamily="@font/lexend"
+                android:textColor="#1E2124" />
+            <com.google.android.material.checkbox.MaterialCheckBox
+                android:id="@+id/cb_qualified"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Qualified"
+                android:textSize="10sp"
+                android:fontFamily="@font/lexend"
+                android:button="@drawable/bg_checkbox_neumorphic"
+                app:buttonTint="@null"
+                android:minHeight="0dp"
+                android:paddingStart="6dp" />
+            <com.google.android.material.checkbox.MaterialCheckBox
+                android:id="@+id/cb_na"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="N/A"
+                android:textSize="10sp"
+                android:fontFamily="@font/lexend"
+                android:button="@drawable/bg_checkbox_neumorphic"
+                app:buttonTint="@null"
+                android:minHeight="0dp"
+                android:paddingStart="6dp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:weightSum="3"
+        android:layout_marginBottom="12dp">
+
+        <FrameLayout
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1.3"
+            android:background="@drawable/bg_neumorphic_recessed"
+            android:paddingHorizontal="12dp"
+            android:layout_marginEnd="8dp">
+            <Spinner
+                android:id="@+id/spinner_employment_status"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@null"
+                android:overlapAnchor="false"
+                android:popupBackground="@drawable/bg_spinner_popup" />
+            <ImageView
+                android:layout_width="10dp"
+                android:layout_height="10dp"
+                android:layout_gravity="end|center_vertical"
+                android:src="@android:drawable/arrow_down_float"
+                app:tint="#888888" />
+        </FrameLayout>
+
+        <FrameLayout
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1.7"
+            android:background="@drawable/bg_neumorphic_recessed"
+            android:paddingHorizontal="12dp">
+            <Spinner
+                android:id="@+id/spinner_highest_degree"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@null"
+                android:overlapAnchor="false"
+                android:popupBackground="@drawable/bg_spinner_popup" />
+            <ImageView
+                android:layout_width="10dp"
+                android:layout_height="10dp"
+                android:layout_gravity="end|center_vertical"
+                android:src="@android:drawable/arrow_down_float"
+                app:tint="#888888" />
+        </FrameLayout>
+    </LinearLayout>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:background="@drawable/bg_neumorphic_recessed"
+        android:paddingHorizontal="12dp"
+        android:layout_marginBottom="24dp">
+        <Spinner
+            android:id="@+id/spinner_specialization"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@null"
+            android:overlapAnchor="false"
+            android:popupBackground="@drawable/bg_spinner_popup" />
+        <ImageView
+            android:layout_width="10dp"
+            android:layout_height="10dp"
+            android:layout_gravity="end|center_vertical"
+            android:src="@android:drawable/arrow_down_float"
+            app:tint="#888888" />
+    </FrameLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="end">
+        <Button
+            android:id="@+id/btn_cancel"
+            android:layout_width="120dp"
+            android:layout_height="48dp"
+            android:text="Cancel"
+            android:textAllCaps="false"
+            android:backgroundTint="#E9ECEF"
+            android:textColor="#1E2124"
+            android:fontFamily="@font/lexend"
+            android:layout_marginEnd="12dp"
+            app:cornerRadius="12dp" />
+        <Button
+            android:id="@+id/btn_save"
+            android:layout_width="120dp"
+            android:layout_height="48dp"
+            android:text="Save"
+            android:textAllCaps="false"
+            android:backgroundTint="#1E2124"
+            android:textColor="#FFFFFF"
+            android:fontFamily="@font/lexend"
+            app:cornerRadius="12dp" />
+    </LinearLayout>
+</LinearLayout>
